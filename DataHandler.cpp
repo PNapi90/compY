@@ -277,7 +277,8 @@ void DataHandler::LOAD_GANIL()
 
 	for (int i = 0; i < 1; ++i)
 	{
-		name = "Gamma_GANIL/GammaEvents.GANIL";
+		name = "Gamma_GANIL/DATA_REAL/FOR_MC";
+		//name = "Gamma_GANIL/GammaEvents.GANIL";
 		file.open(name);
 		if (file.fail())
 		{
@@ -305,7 +306,7 @@ void DataHandler::LOAD_GANIL()
 
 			if (type == -1)
 			{
-				process = (std::abs(E - 661.7) > 2);
+				process = true;//(std::abs(E - 661.7) > 2);
 				E0 = 661.7;
 				new_gamma = true;
 			}
