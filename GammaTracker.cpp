@@ -418,6 +418,10 @@ bool GammaTracker::Tracking(int iter,int pos_d)
 			{
 				for(int k = 0;k < 3;++k) mu_vec[j][k] = GammaBuffer[sortarray[i+j-1]][k+1];
 			}
+
+			for(int j = 0;j < 2;++j)
+				angle_vec[i][j] = j*10000;
+
 			//get sigmas from position error propagation
 			get_sigmas(i+1,perm_iter);
 			//get Compton scattering angles from energies
@@ -429,16 +433,20 @@ bool GammaTracker::Tracking(int iter,int pos_d)
 			{
 				if (angle_vec[i][1] != WRONG_CASE)
 				{
-					if (std::abs(Estart - 661.7) <= 2)
-					{
-						EtmpVec[0] = Estart;
-						EtmpVec[1] = GammaBuffer[sortarray[i]][0];
+
+					EtmpVec[0] = Estart;
+					EtmpVec[1] = GammaBuffer[sortarray[i]][0];
 						
-						//Get intersected area
-						PValue = MC->GetIntersection(binsArray, thetaX, EtmpVec);
-					}
-					//only use thetaX areas
-					else PValue = MC->GetPValue(binsArray, thetaX);
+					//Get intersected area
+					if (std::abs(Estart - 661.7) <= 2)
+						PValue = MC->GetIntersection_661(binsArray, thetaX, EtmpVec);	
+					else
+						PValue = MC->GetPValue(binsArray, thetaX); //only use thetaX areas
+
+					
+
+					//PValue = MC->GetIntersection(binsArray, thetaX, EtmpVec);
+					
 				}	
 				else PValue = exp(-10);
 
@@ -543,17 +551,19 @@ void GammaTracker::get_E_angle(double Estart,double Ed,int pos)
 	if(!DopplerCalled)
 	{
 		cth = 1. - mc2/(Estart-Ed) + mc2/Estart;
-		angle_vec[pos][1] = (std::abs(cth) > 1) ? WRONG_CASE : cth;
+		//angle_vec[pos][1] = (std::abs(cth) > 1) ? WRONG_CASE : cth;
 	}
 
 	//only use MC if big or small angles are used
 	if(!ForceMode) MC_Calc = (std::abs(cth) >= 0.8);
 	 
-	if(cth < -1.)
+	if(cth < -1 && std::abs(Estart - 661.7) > 2)
 	{
 		angle_vec[pos][1] = WRONG_CASE;
 		return;
 	}
+
+
 
 	double tmpV = acos(cth)*180./M_PI;
 

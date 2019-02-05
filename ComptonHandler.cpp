@@ -2,7 +2,10 @@
 
 //--------------------------------------------------------------
 
-ComptonHandler::ComptonHandler(int _nBinsE,int _nBinsTh) : nBinsE(_nBinsE) , nBinsTh(_nBinsTh)
+ComptonHandler::ComptonHandler(int _nBinsE,
+                               int _nBinsTh)
+    : nBinsE(_nBinsE) ,
+      nBinsTh(_nBinsTh)
 {}
 
 //--------------------------------------------------------------

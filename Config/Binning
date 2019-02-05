@@ -1,0 +1,13 @@
+# ======================================================================
+#
+# Configuration file of histogram binning
+# please only change this if you are sure that binnings have changed!
+#
+# ======================================================================
+#
+# order of binnings:
+# d0 , d12 , theta , Histograms , binsE
+#
+150 150 181 101 350
+#
+#

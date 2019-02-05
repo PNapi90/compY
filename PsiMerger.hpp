@@ -14,13 +14,16 @@ class PsiMerger
 {
 private:
 
-    int d0;
+    std::string folderName;
+
+    int d0,E,Ebins;
     std::vector < std::vector<std::vector<int>>> Histograms;
 
     void LOAD();
 
 public:
-    PsiMerger(int _d0);
+    PsiMerger(int _E,
+              int _d0);
     ~PsiMerger();
 
     bool GetP(int d12_i,

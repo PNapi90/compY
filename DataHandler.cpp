@@ -221,7 +221,8 @@ void DataHandler::LOAD_Double()
 				E0_2[gamma_c] = E;
 			}
 			else{
-				if(skip) continue;
+				if(skip) 
+					continue;
 
 				filled_gammas[gamma_c] = true;
 
@@ -277,8 +278,8 @@ void DataHandler::LOAD_GANIL()
 
 	for (int i = 0; i < 1; ++i)
 	{
-		name = "Gamma_GANIL/DATA_REAL/FOR_MC";
-		//name = "Gamma_GANIL/GammaEvents.GANIL";
+		//name = "Gamma_GANIL/DATA_REAL/FOR_MC";
+		name = "Gamma_GANIL/GammaEvents.GANIL";
 		file.open(name);
 		if (file.fail())
 		{
@@ -306,7 +307,9 @@ void DataHandler::LOAD_GANIL()
 
 			if (type == -1)
 			{
-				process = true;//(std::abs(E - 661.7) > 2);
+				process = (std::abs(E - 661.7) > 2);
+				
+				process = true;
 				E0 = 661.7;
 				new_gamma = true;
 			}
@@ -351,7 +354,8 @@ void DataHandler::LOAD_GANIL()
 
 //-------------------------------------------------------------------------------------------
 
-inline std::string DataHandler::EndingName(int i){
+inline std::string DataHandler::EndingName(int i)
+{
 	if(i > 999) return std::to_string(i);
 	if(i > 99) return "0" + std::to_string(i);
 	std::string returnName = (i > 9) ? "00" : "000";
@@ -360,7 +364,8 @@ inline std::string DataHandler::EndingName(int i){
 
 //-------------------------------------------------------------------------------------------
 
-void DataHandler::ResetGammaBuffer2(bool two_gammas){
+void DataHandler::ResetGammaBuffer2(bool two_gammas)
+{
 
 	if(two_gammas){
 		double Etot = 0;
@@ -430,7 +435,10 @@ void DataHandler::MergeGammaAndSave(){
 	for(int i = 0;i < 4;++i) MergedData[0][i] = Gamma[0][i];
 	m_iter = 0;
 	++gammaID;
-	if(!NoG) saveTMP();
+	
+	if(!NoG)
+		saveTMP();
+	
 	double EnergySum = 0;
 
 	for (int i = 0; i < gamma_iter-1; ++i) {

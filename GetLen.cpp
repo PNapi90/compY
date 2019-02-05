@@ -8,6 +8,12 @@ int main()
     std::ifstream OFT("Gamma_GANIL/DATA_REAL/OFT");
     std::ifstream MC("OutputFolder/Output_FWHM_5.000000_0_1");
 
+    //=============================================
+    //||                                         ||
+    //||      !!! for MC use ./compY -T !!!      ||
+    //||                                         ||
+    //=============================================
+
     std::string line;
 
     int countS = 0,countO = 0,countM = 0;

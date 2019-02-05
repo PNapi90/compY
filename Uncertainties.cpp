@@ -2,9 +2,13 @@
 
 //--------------------------------------------------------------
 
-Uncertainties::Uncertainties(int _nBins_d0,int _nBins_d12,int _nBins_theta,int _nBins_Hist,bool _MC_Calc,double sigmaX,int nBinsE) : 
-                            nBins_d0(_nBins_d0) , nBins_d12(_nBins_d12) ,nBins_theta(_nBins_theta) , 
-                            nBins_Hist(_nBins_Hist), MC_Calc(_MC_Calc) , EComp(nBinsE,_nBins_Hist)
+Uncertainties::Uncertainties(Binnings &Bins)
+    : nBins_d0(Bins.nBins_d0),
+      nBins_d12(Bins.nBins_d12),
+      nBins_theta(Bins.nBins_theta),
+      nBins_Hist(Bins.nBins_Hist),
+      MC_Calc(Bins.MC_Calc),
+      EComp(Bins.nBinsE, Bins.nBins_Hist)
 {   
 
     if(MC_Calc)
@@ -13,15 +17,15 @@ Uncertainties::Uncertainties(int _nBins_d0,int _nBins_d12,int _nBins_theta,int _
         D0s.reserve(nBins_d0);
         PSIs.reserve(nBins_d0);
 
-        int d0_bins[nBins_d0];
+        int d0_bins = 0;
 
         factor_d0 = 600/nBins_d0;
 
         for(int i = 0;i < nBins_d0;++i)
         {
-            d0_bins[i] = i*factor_d0;
-            PSIs.push_back(std::make_shared<PsiMerger>(d0_bins[i]));
-            D0s.push_back(std::make_shared<D0_Handler>(d0_bins[i],nBins_d12,sigmaX));
+            d0_bins = i*factor_d0;
+            PSIs.push_back(std::make_shared<PsiMerger>(-999,d0_bins));
+            D0s.push_back(std::make_shared<D0_Handler>(d0_bins,nBins_d12,Bins.sigmaX,nBins_Hist,nBins_theta));
         }
         D0s_Called = std::vector<bool>(nBins_d0,false); 
 

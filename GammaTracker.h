@@ -87,12 +87,21 @@ private:
 
 
 public:
-	GammaTracker(int*,bool,double,int,
-				 double,int,bool,
-				 MC_Sampler*,bool,int,bool,bool);
-	~GammaTracker();
+  GammaTracker(int *range,
+			   bool type,
+			   double FWHM,
+			   int MAX_ITER,
+			   double MAX_TRACK,
+			   int thr_num,
+			   bool Track,
+			   MC_Sampler *MC,
+			   bool _MC_Calc,
+			   int _order,
+			   bool _ForceMode,
+			   bool _GANIL);
+  ~GammaTracker();
 
-	std::thread threading();
+  std::thread threading();
 };
 
 #endif /* GAMMATRACKER_H_ */

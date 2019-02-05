@@ -2,9 +2,16 @@
 
 //--------------------------------------------------------------
 
-D12_Handler::D12_Handler(int _d0_i,int _d12_i,int _nBins_theta,int _nBins_Hist,
-                         double _SigmaX) : d0_i(_d0_i) , d12_i(_d12_i) , nBins_theta(_nBins_theta) ,
-                         nBins_Hist(_nBins_Hist) , SigmaX(_SigmaX)
+D12_Handler::D12_Handler(int _d0_i,
+                         int _d12_i,
+                         int _nBins_theta,
+                         int _nBins_Hist,
+                         double _SigmaX) 
+    : d0_i(_d0_i) ,
+      d12_i(_d12_i) , 
+      nBins_theta(_nBins_theta) ,
+      nBins_Hist(_nBins_Hist) , 
+      SigmaX(_SigmaX)
 {
     refactor_d0 = 1;
     refactor_d12 = 1;
@@ -51,6 +58,13 @@ void D12_Handler::LOAD(){
         
         maxVal = 0;
 
+        if (nBins_Hist != Values.size())
+        {
+            std::cerr << "\nUnexpected histogram formats in d0_ " << d0_i << "/d12_" << d12_i << " :" <<std::endl;
+            std::cerr << "Exp.: " << nBins_Hist << " delivered: " << Values.size() << std::endl;
+            exit(1);
+        }
+
         for(int i = 0;i < Values.size();++i)
         {
             Histogram[theta_i][i] = std::stod(Values[i]);
@@ -72,7 +86,7 @@ void D12_Handler::LOAD(){
 
 double D12_Handler::GetPValue(int theta_Ei,double thetaX){
     
-    int cth_i = (int)((thetaX + 1.)*nBins_Hist/2.);
+    int cth_i = (int)((thetaX + 1.)*(nBins_Hist-1)/2.);
 
     return (Histogram[theta_Ei][cth_i]/Maxima[theta_Ei]);
 }

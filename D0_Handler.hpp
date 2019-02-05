@@ -10,7 +10,7 @@ class D0_Handler{
 
 private:
 
-    int nBins_d12,d0_i,factor_d12;
+    int nBins_d12,d0_i,factor_d12,nBins_theta,nBins_Hist;
 
     bool Loaded;
 
@@ -20,15 +20,17 @@ private:
     void INIT(int d12_i);
 
 public:
-    D0_Handler(int _d0_i,
-               int _nBins_d12,
-               double sigmaX);
-    ~D0_Handler();
+  D0_Handler(int _d0_i,
+             int _nBins_d12,
+             double sigmaX,
+             int _nBins_Hist,
+             int _nBins_theta);
+  ~D0_Handler();
 
-    bool Check_Loader();
+  bool Check_Loader();
 
-    double Call(int d12_i,int theta_Ei,double theta_Xi);
-    std::vector<double> GetHistX(int d12_i, int theta_Ei, double thetaX);
+  double Call(int d12_i, int theta_Ei, double theta_Xi);
+  std::vector<double> GetHistX(int d12_i, int theta_Ei, double thetaX);
 
 };
 

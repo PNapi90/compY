@@ -2,15 +2,31 @@
 
 //--------------------------------------------------------------
 
-MC_Sampler::MC_Sampler(int _binningD, bool _MC_Calc, double sigmaX) : U(_binningD,_binningD, 181, 101, _MC_Calc, sigmaX, 175),
-                                                                      binningD(_binningD), MC_Calc(_MC_Calc)
+MC_Sampler::MC_Sampler(Binnings &Bins)
+    : U(Bins),
+      binningD(Bins.nBins_d0),
+      MC_Calc(Bins.MC_Calc)
 {
+
+    binningE = 25;
+
     if(MC_Calc)
     {
         std::cout << std::endl;
         std::cout << "Histograms loaded" << std::endl;
         std::cout << "-----------------" << std::endl;
     }
+
+    Energies.reserve(30);
+    int Etmp = 0;
+    
+    for(int i = 0;i < 30;++i)
+    {   
+        Etmp = (i+1)*25;
+        Energies.push_back(std::make_shared<EnergyParser>(Etmp, binningD));
+    }
+
+
 }
 
 //--------------------------------------------------------------
@@ -36,11 +52,29 @@ int MC_Sampler::GetBinning()
 
 //--------------------------------------------------------------
 
-bool MC_Sampler::GetIntersection(std::vector<int> &binsArray, double thetaX,std::vector<double> &E)
+bool MC_Sampler::GetIntersection(std::vector<int> &binsArray,
+                                 double thetaX,
+                                 std::vector<double> &E)
 {
+
+    int EnergyBin = (int) (E[0]/binningE - 1);
+
     std::lock_guard<std::mutex> LOCK(MUTEX);
-    bool P = U.CallIntersection(binsArray,thetaX,E);
+    bool P = Energies[EnergyBin]->CallIntersection(binsArray, thetaX, E);
+
     return P;
 }
+
+//--------------------------------------------------------------
+
+bool MC_Sampler::GetIntersection_661(std::vector<int> &binsArray,
+                                     double thetaX,
+                                     std::vector<double> &E)
+{
+    std::lock_guard<std::mutex> LOCK(MUTEX);
+    bool P = U.CallIntersection(binsArray, thetaX, E);
+    return P;
+
+} 
 
 //--------------------------------------------------------------

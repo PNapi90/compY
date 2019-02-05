@@ -2,14 +2,28 @@
 
 //--------------------------------------------------------------
 
-PsiMerger::PsiMerger(int _d0)
-    : d0(_d0)
+PsiMerger::PsiMerger(int _E,
+                     int _d0)
+    : d0(_d0),
+      E(_E)
 {
 
+    if(E == -999)
+    {
+        folderName = "EGamma_661/";
+        Ebins = 175;
+    }
+    else
+    {
+        folderName = "EGamma_" + std::to_string(E) + "/";
+        Ebins = (int)(E/25) + 1;
+    }
     Histograms = std::vector<std::vector<std::vector<int>>>(150,
-                 std::vector<std::vector<int>>(175,std::vector<int>(2,0)));
+                 std::vector<std::vector<int>>(Ebins,
+                 std::vector<int>(2,0)));
 
-    LOAD();
+    if(E == -999)
+        LOAD();
 }
 
 //--------------------------------------------------------------
@@ -32,7 +46,7 @@ bool PsiMerger::GetP(int d12_i,int E_i,int theta_i)
 void PsiMerger::LOAD()
 {
     std::string name;
-    std::string folder = "d0_E_Merge/d0_" + std::to_string(d0);
+    std::string folder = "d0_E_Merge/" + folderName + "d0_" + std::to_string(d0);
     std::ifstream DATA;
 
     int d12_i = 0;
@@ -49,7 +63,7 @@ void PsiMerger::LOAD()
             exit(1);
         }
 
-        for(int j = 0;j < 175;++j)
+        for(int j = 0;j < Ebins;++j)
         {
             for(int k = 0;k < 2;++k)
             {

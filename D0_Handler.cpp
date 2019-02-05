@@ -2,13 +2,22 @@
 
 //--------------------------------------------------------------
 
-D0_Handler::D0_Handler(int _d0_i,int _nBins_d12,double sigmaX) : nBins_d12(_nBins_d12) , d0_i(_d0_i)
+D0_Handler::D0_Handler(int _d0_i,
+                       int _nBins_d12,
+                       double sigmaX,
+                       int _nBins_Hist,
+                       int _nBins_theta) 
+    : nBins_d12(_nBins_d12),
+      d0_i(_d0_i),
+      nBins_Hist(_nBins_Hist),
+      nBins_theta(_nBins_theta)
+
 {
     D12s.reserve(nBins_d12);
     int d12factor = 600/nBins_d12;
 
     for(int i = 0;i < nBins_d12;++i){
-        D12s.push_back(std::make_shared<D12_Handler>(d0_i,i*d12factor,181,101,sigmaX));
+        D12s.push_back(std::make_shared<D12_Handler>(d0_i,i*d12factor,nBins_theta,nBins_Hist,sigmaX));
     }
     Called_d12s = std::vector<bool>(nBins_d12,false);
     Loaded = false;
@@ -27,6 +36,7 @@ double D0_Handler::Call(int d12_i,int theta_Ei,double thetaX)
 {
     int tmp = factor_d12;
     int trueBin = d12_i/factor_d12;
+    
     //if(!Called_d12s[trueBin]) INIT(trueBin);
 
     return D12s[trueBin]->GetPValue(theta_Ei,thetaX);

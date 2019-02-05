@@ -8,6 +8,7 @@
 #include <iostream>
 #include <string>
 #include <thread>
+#include <fstream>
 
 
 #include "DataHandler.h"
@@ -15,6 +16,8 @@
 #include "GammaScraper.h"
 #include "Merger.h"
 #include "MC_Sampler.hpp"
+#include "Binnings.hpp"
+
 
 //--------------------------------------------------------------
 
@@ -26,18 +29,23 @@ void FlagChecker(int argc,char** argv,int &nthr,int &amount_of_sets,
 				bool &CRange_F,double &MAX_TRACK,bool &helpCalled,bool &Smear,
 				bool &MC_Calc,int &order,bool &Force,bool &GANIL);
 
-void PrintCouts(const double,const bool,const int,const int,
-				const double,const bool,const bool,const bool,
-				const int,const bool,const double,const bool,const bool,
-				const int,const bool,const bool);
+void PrintCouts(const double fwhm, const bool type, const int nthr,
+				const int offset, const double mtrack, const bool Tracking,
+				const bool SkipHandler, const bool SkipTracker, const int maxG,
+				const bool NoG, const double CRange, const bool Smear,
+				const bool MC_Calc, const int order, const bool Force,
+				const bool GANIL);
 
 void PrintHelp();
 
 void getSets(int*,const int,const int);
 
+void SetBins(Binnings &Bins);
+
 //--------------------------------------------------------------
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv) 
+{
 
 	int nthr = 1;
 	int amount_of_sets = 1;
@@ -118,7 +126,14 @@ int main(int argc, char **argv) {
 	GammaTracker** Tracker = (SkipTracker) ? nullptr : new GammaTracker*[nthr];
 	GammaScraper** Scraper = new GammaScraper*[nthr];
 
-    MC_Sampler* MC = new MC_Sampler((int) 150,MC_Calc,fwhm);
+	//set binnings 
+	Binnings Bins;
+	SetBins(Bins);
+
+	Bins.MC_Calc = MC_Calc;
+	Bins.sigmaX = fwhm;
+
+    MC_Sampler* MC = new MC_Sampler(Bins);
 
 	for(int i = 0;i < nthr-1;++i){
 		set_begin = from_to[1];
@@ -150,6 +165,7 @@ int main(int argc, char **argv) {
 	}
 	std::cout << "Handlers: done" << std::endl;
 	std::cout << "-----------------" << std::endl;
+	
 
 	if(!SkipTracker){
 		for(int i = 0;i < nthr;++i) t[i] = Tracker[i]->threading();
@@ -433,6 +449,35 @@ void FlagChecker(int argc,char** argv,int &nthr,int &amount_of_sets,
 			continue;
 		}
 	}
+}
+
+//--------------------------------------------------------------
+
+void SetBins(Binnings &Bins)
+{
+
+	std::ifstream Conf("Config/Binning");
+	std::string line;
+
+	std::vector<int> tmp(5,0);
+
+	if(Conf.fail())
+	{
+		std::cerr << "Could not find binning config file at Config/Binning" << std::endl;
+		exit(1);
+	}
+	while(std::getline(Conf,line))
+	{
+		if(line[0] == '#')
+			continue;
+		sscanf(line.c_str(),"%d %d %d %d %d", &tmp[0], &tmp[1], &tmp[2], &tmp[3], &tmp[4]);
+	}
+
+	Bins.nBins_d0 = tmp[0];
+	Bins.nBins_d12 = tmp[1];
+	Bins.nBins_theta = tmp[2];
+	Bins.nBins_Hist = tmp[3];
+	Bins.nBinsE = tmp[4];
 }
 
 //--------------------------------------------------------------

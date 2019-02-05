@@ -13,7 +13,7 @@
 #include "D0_Handler.hpp"
 #include "ComptonHandler.hpp"
 #include "PsiMerger.hpp"
-
+#include "Binnings.hpp"
 
 class Uncertainties{
 
@@ -35,13 +35,7 @@ private:
     ComptonHandler EComp;
 
 public:
-    Uncertainties(int _nBins_d0,
-                  int _nBins_d12,
-                  int _nBins_theta,
-                  int _nBins_Hist,
-                  bool _MC_Calc,
-                  double sigmaX,
-                  int nBinsE);
+    Uncertainties(Binnings &Bins);
 
     ~Uncertainties();
 
