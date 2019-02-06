@@ -419,6 +419,7 @@ bool GammaTracker::Tracking(int iter,int pos_d)
 				for(int k = 0;k < 3;++k) mu_vec[j][k] = GammaBuffer[sortarray[i+j-1]][k+1];
 			}
 
+			//reset scattering angles (j*10000 to ensure large difference if not used)
 			for(int j = 0;j < 2;++j)
 				angle_vec[i][j] = j*10000;
 
@@ -440,13 +441,10 @@ bool GammaTracker::Tracking(int iter,int pos_d)
 					//Get intersected area
 					if (std::abs(Estart - 661.7) <= 2)
 						PValue = MC->GetIntersection_661(binsArray, thetaX, EtmpVec);	
+					else if(Estart < 275)
+						PValue = MC->GetIntersection(binsArray, thetaX, EtmpVec);
 					else
-						PValue = MC->GetPValue(binsArray, thetaX); //only use thetaX areas
-
-					
-
-					//PValue = MC->GetIntersection(binsArray, thetaX, EtmpVec);
-					
+						PValue = MC->GetPValue(binsArray, thetaX);
 				}	
 				else PValue = exp(-10);
 
@@ -496,7 +494,9 @@ bool GammaTracker::Tracking(int iter,int pos_d)
 	bool possible_tracking = false;
 	for(int i = 0;i < perm_iter;++i){
 		possible_tracking = (delta_arr[i] <= MAX_TRACK);
-		if(possible_tracking) return true;
+		
+		if(possible_tracking)
+			return true;
 	}
 
 	return false;
@@ -534,7 +534,6 @@ void GammaTracker::get_E_angle(double Estart,double Ed,int pos)
 {
 
 	double cth = 0;
-	bool DopplerCalled = false;
 
 	if (Estart < Ed)
 	{
@@ -542,20 +541,11 @@ void GammaTracker::get_E_angle(double Estart,double Ed,int pos)
 		return;
 	}
 
-	/*if(Estart == 661.7 && Ed > Ecompton_max && Check_Doppler(Ed)){
-		angle_vec[pos][1] = -1;
-		cth = -1;
-		DopplerCalled = true;
-	}*/
-
-	if(!DopplerCalled)
-	{
-		cth = 1. - mc2/(Estart-Ed) + mc2/Estart;
-		//angle_vec[pos][1] = (std::abs(cth) > 1) ? WRONG_CASE : cth;
-	}
+	cth = 1. - mc2/(Estart-Ed) + mc2/Estart;
 
 	//only use MC if big or small angles are used
-	if(!ForceMode) MC_Calc = (std::abs(cth) >= 0.8);
+	if(!ForceMode) 
+		MC_Calc = (std::abs(cth) >= 0.8);
 	 
 	if(cth < -1 && std::abs(Estart - 661.7) > 2)
 	{
@@ -568,7 +558,7 @@ void GammaTracker::get_E_angle(double Estart,double Ed,int pos)
 	double tmpV = acos(cth)*180./M_PI;
 
 	binsArray[2] = (int) tmpV;
-	//binsArray[2] = (int)(tmpV*nBinsT/180.);
+
 }
 
 //--------------------------------------------------------------

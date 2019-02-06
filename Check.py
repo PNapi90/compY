@@ -69,7 +69,7 @@ plt.bar(x3,bar3,width=widthB,color="royalblue",align="edge",hatch="/",alpha = 0.
 
 plt.xticks(values,names,fontsize=10)
 plt.yticks(yl,ylS)
-plt.ylim([0,120])
+plt.ylim([40,105])
 
 #plt.ylabel("Rel. Reconst. $\\gamma$s in $\\%$",fontsize = 6)
 

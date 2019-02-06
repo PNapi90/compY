@@ -74,7 +74,7 @@ void D12_Handler::LOAD(){
 
         ++iter;
     }
-    if(d12_i % 100 == 0 && d12_i > 0)
+    if(d12_i % 100 == 0 && d12_i > 0 && false)
     {
         //std::cout << "\r";
         std::cout << "\rLoaded " << name << " histogram         ";

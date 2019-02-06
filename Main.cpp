@@ -9,6 +9,8 @@
 #include <string>
 #include <thread>
 #include <fstream>
+#include <vector>
+#include <memory>
 
 
 #include "DataHandler.h"
@@ -18,39 +20,14 @@
 #include "MC_Sampler.hpp"
 #include "Binnings.hpp"
 
-
 //--------------------------------------------------------------
 
-void FlagChecker(int argc,char** argv,int &nthr,int &amount_of_sets,
-				int &offset,double &CRange,int &maxG,double &fwhm,
-				bool &fwhm_flag,bool &type,bool &thr_flag,bool &file_flag,
-				bool &track_flag,bool &offset_flag,bool &Tracking,
-				bool &SkipHandler,bool &SkipTracker,bool &maxG_B,bool &NoG,
-				bool &CRange_F,double &MAX_TRACK,bool &helpCalled,bool &Smear,
-				bool &MC_Calc,int &order,bool &Force,bool &GANIL);
-
-void PrintCouts(const double fwhm, const bool type, const int nthr,
-				const int offset, const double mtrack, const bool Tracking,
-				const bool SkipHandler, const bool SkipTracker, const int maxG,
-				const bool NoG, const double CRange, const bool Smear,
-				const bool MC_Calc, const int order, const bool Force,
-				const bool GANIL);
-
-void PrintHelp();
-
-void getSets(int*,const int,const int);
-
-void SetBins(Binnings &Bins);
-
-//--------------------------------------------------------------
-
-int main(int argc, char **argv) 
+struct FlagsAndVals
 {
-
 	int nthr = 1;
 	int amount_of_sets = 1;
 	int offset = 0;
-	
+
 	double CRange = 1;
 
 	int maxG = 1000000000;
@@ -74,45 +51,58 @@ int main(int argc, char **argv)
 	int order = 1;
 	bool Force = true;
 	bool GANIL = false;
-	
+
 	double MAX_TRACK = 3.;
+};
 
-	FlagChecker(argc,argv,nthr,amount_of_sets,offset,CRange,maxG,fwhm,
-				fwhm_flag,type,thr_flag,file_flag,track_flag,
-				offset_flag,Tracking,SkipHandler,SkipTracker,
-				maxG_B,NoG,CRange_F,MAX_TRACK,helpCalled,Smear,MC_Calc,
-				order,Force,GANIL);
 
-	if(helpCalled) return 0;
+//--------------------------------------------------------------
 
-	if(!Force) MC_Calc = true;
+void FlagChecker(int argc,char** argv,FlagsAndVals &F);
+
+void PrintCouts(FlagsAndVals &F);
+
+void PrintHelp();
+
+void getSets(int*,const int,const int);
+
+void SetBins(Binnings &Bins);
+
+//--------------------------------------------------------------
+
+int main(int argc, char **argv) 
+{
+
+	FlagsAndVals F;
+
+
+	FlagChecker(argc,argv,F);
+
+	if (F.helpCalled)
+		return 0;
+
+	if (!F.Force)
+		F.MC_Calc = true;
+
+	F.SkipHandler = F.SkipTracker ? F.SkipTracker : F.SkipHandler;
+
 	
-	
-	SkipHandler = SkipTracker ? SkipTracker : SkipHandler;
-
-	//no handling of data needed for GANIL data set
-	//(already preprocessed)
-	if(GANIL)
+	if (F.GANIL)
 	{
-		//SkipHandler = true;
-		nthr = 1;
-		Smear = false;
-		CRange = 0;
-		//Tracking = true;
+		F.nthr = 1;
+		F.Smear = false;
+		F.CRange = 0;
 	}
 
-	PrintCouts(fwhm,type,nthr,offset,MAX_TRACK,Tracking,
-			   SkipHandler,SkipTracker,maxG,NoG,CRange,
-			   Smear,MC_Calc,order,Force,GANIL);
+	PrintCouts(F);
 
 
 	int* sets = new int[2];
 
-	if(nthr >= amount_of_sets) nthr = amount_of_sets;
+	if (F.nthr >= F.amount_of_sets)
+		F.nthr = F.amount_of_sets;
 
-
-	getSets(sets,nthr,amount_of_sets);
-
+	getSets(sets, F.nthr, F.amount_of_sets);
 
 	int MAX_ITER = 6;
 	
@@ -122,82 +112,121 @@ int main(int argc, char **argv)
 	int* from_to = new int[2];
 	for(int i = 0;i < 2;++i) from_to[i] = 0;
 
-	DataHandler** Handlers = (SkipHandler) ? nullptr : new DataHandler*[nthr];
-	GammaTracker** Tracker = (SkipTracker) ? nullptr : new GammaTracker*[nthr];
-	GammaScraper** Scraper = new GammaScraper*[nthr];
+	std::vector<std::shared_ptr<DataHandler>> Handlers;
+	std::vector<std::shared_ptr<GammaTracker>> Tracker;
+	std::vector<std::shared_ptr<GammaScraper>> Scraper;
+
+	if (!F.SkipHandler)
+		Handlers.reserve(F.nthr);
+	if (!F.SkipTracker)
+		Tracker.reserve(F.nthr);
+
+	Scraper.reserve(F.nthr);
 
 	//set binnings 
 	Binnings Bins;
 	SetBins(Bins);
 
-	Bins.MC_Calc = MC_Calc;
-	Bins.sigmaX = fwhm;
+	Bins.MC_Calc = F.MC_Calc;
+	Bins.sigmaX = F.fwhm;
 
-    MC_Sampler* MC = new MC_Sampler(Bins);
+	MC_Sampler* MC = new MC_Sampler(Bins);
 
-	for(int i = 0;i < nthr-1;++i){
+	for (int i = 0; i < F.nthr - 1; ++i)
+	{
 		set_begin = from_to[1];
 		set_end = from_to[1] + sets[0];
 		from_to[0] = set_begin;
 		from_to[1] = set_end;
-		if(i == 0) for(int j = 0;j < 2;++j) from_to[j] += offset;
-		if(!SkipHandler) Handlers[i] = new DataHandler(from_to,type,fwhm,i,maxG,((unsigned int) i),NoG,CRange,((int)Smear*1),GANIL);
-		if(!SkipTracker) Tracker[i] = new GammaTracker(from_to,type,fwhm,MAX_ITER,MAX_TRACK,i,Tracking,MC,MC_Calc,order,Force,false);
-		Scraper[i] = new GammaScraper(from_to,type,i,NoG);
+		
+		if(i == 0)
+		{
+			for(int j = 0;j < 2;++j)
+				from_to[j] += F.offset;
+		}
+		
+		if (!F.SkipHandler)
+			Handlers.push_back(std::make_shared<DataHandler>(from_to, F.type, F.fwhm,
+															 i, F.maxG, ((unsigned int)i),
+															 F.NoG, F.CRange, ((int)F.Smear * 1), F.GANIL));
+
+		if (!F.SkipTracker)
+			Tracker.push_back(std::make_shared<GammaTracker>(from_to, F.type, F.fwhm,
+															 MAX_ITER, F.MAX_TRACK, i,
+															 F.Tracking, MC, F.MC_Calc,
+															 F.order, F.Force, false));
+
+		Scraper.push_back(std::make_shared<GammaScraper>(from_to, F.type, i, F.NoG));
 	}
 
 
 	from_to[0] = from_to[1];
 	from_to[1] = from_to[0] + sets[1];
-	if(!SkipHandler) Handlers[nthr-1] = new DataHandler(from_to,type,fwhm,nthr-1,maxG,(unsigned int) nthr-1,NoG,CRange,((int)Smear*1),GANIL);
-	if(!SkipTracker) Tracker[nthr-1] = new GammaTracker(from_to,type,fwhm,MAX_ITER,MAX_TRACK,nthr-1,Tracking,MC,MC_Calc,order,Force,false);
-	Scraper[nthr-1] = new GammaScraper(from_to,type,nthr-1,NoG);
-		
-	
-	std::thread t[nthr];
-	
-	if(!SkipHandler){
-		for(int i = 0;i < nthr;++i) t[i] = Handlers[i]->threading();
-		for(int i = 0;i < nthr;++i) t[i].join();
+	if (!F.SkipHandler)
+		Handlers.push_back(std::make_shared<DataHandler>(from_to, F.type, F.fwhm,
+														 F.nthr - 1, F.maxG, (unsigned int)F.nthr - 1,
+														 F.NoG, F.CRange, ((int)F.Smear * 1), F.GANIL));
+	if (!F.SkipTracker)
+		Tracker.push_back(std::make_shared<GammaTracker>(from_to, F.type, F.fwhm,
+														 MAX_ITER, F.MAX_TRACK, F.nthr - 1,
+														 F.Tracking, MC, F.MC_Calc,
+														 F.order, F.Force, false));
 
-		for(int i = 0;i < nthr;++i) delete Handlers[i];
-		delete[] Handlers;
+	Scraper.push_back(std::make_shared<GammaScraper>(from_to, F.type, F.nthr - 1, F.NoG));
+
+	std::thread t[F.nthr];
+
+	if (!F.SkipHandler)
+	{
+		for (int i = 0; i < F.nthr; ++i)
+			t[i] = Handlers[i]->threading();
+		for (int i = 0; i < F.nthr; ++i)
+			t[i].join();
+
+		for (int i = 0; i < F.nthr; ++i)
+			Handlers.pop_back();
 	}
 	std::cout << "Handlers: done" << std::endl;
 	std::cout << "-----------------" << std::endl;
-	
 
-	if(!SkipTracker){
-		for(int i = 0;i < nthr;++i) t[i] = Tracker[i]->threading();
-		for(int i = 0;i < nthr;++i) t[i].join();
+	if (!F.SkipTracker)
+	{
+		for (int i = 0; i < F.nthr; ++i)
+			t[i] = Tracker[i]->threading();
+		for (int i = 0; i < F.nthr; ++i)
+			t[i].join();
 
-		for(int i = 0;i < nthr;++i) delete Tracker[i];
-		delete[] Tracker;
+		for (int i = 0; i < F.nthr; ++i)
+			Tracker.pop_back();
 	}
 	std::cout << "Trackers: done" << std::endl;
 	std::cout << "-----------------" << std::endl;
 
-	for(int i = 0;i < nthr;++i) t[i] = Scraper[i]->threading();
-	for(int i = 0;i < nthr;++i) t[i].join();
+	for (int i = 0; i < F.nthr; ++i)
+		t[i] = Scraper[i]->threading();
+	for (int i = 0; i < F.nthr; ++i)
+		t[i].join();
 
 	int scrapped = 0;
-	for(int i = 0;i < nthr;++i) scrapped += Scraper[i]->get_in_bad_dets();
+	for (int i = 0; i < F.nthr; ++i)
+		scrapped += Scraper[i]->get_in_bad_dets();
 
-	for(int i = 0;i < nthr;++i) delete Scraper[i];
-	delete[] Scraper;
+	for (int i = 0; i < F.nthr; ++i)
+		Scraper.pop_back();
 
 
 	
 	std::cout << "Scrapers: done" << std::endl;
 	std::cout << "-----------------" << std::endl;
-	
-	from_to[0] = offset;
-	from_to[1] = offset + amount_of_sets;
-	Merger Merge(nthr,type,from_to,offset,fwhm);
+
+	from_to[0] = F.offset;
+	from_to[1] = F.offset + F.amount_of_sets;
+	Merger Merge(F.nthr, F.type, from_to, F.offset, F.fwhm);
 
 	delete[] sets;
 	delete[] from_to;
 	sets = nullptr;
+	from_to = nullptr;
 	
 	std::cout << "Merger: done" << std::endl;
 	std::cout << "*****************" << std::endl;
@@ -213,48 +242,54 @@ int main(int argc, char **argv)
 
 //--------------------------------------------------------------
 
-void PrintCouts(const double fwhm,const bool type,const int nthr,
-				const int offset,const double mtrack,const bool Tracking,
-				const bool SkipHandler,const bool SkipTracker,const int maxG,
-				const bool NoG,const double CRange,const bool Smear,
-				const bool MC_Calc,const int order,const bool Force,
-				const bool GANIL)
+void PrintCouts(FlagsAndVals &F)
 {
 	int MaximumG = 1000000000;
-	bool MG_mg = MaximumG == maxG;
+	bool MG_mg = MaximumG == F.maxG;
 
 	std::string order_string;
-	if(order > 2 || order <= 0) order_string = "1st order";
-	else order_string = (order == 1) ? "1st order" : "2nd order";
-	
+	if (F.order > 2 || F.order <= 0)
+		order_string = "1st order";
+	else
+		order_string = (F.order == 1) ? "1st order" : "2nd order";
+
 	std::string d_or_s[2] = {"\u03B3","\u03B3\u03B3"};
-	std::string t_name = nthr == 1 ? "thread" : "threads";
-	std::string tr_tmp = Tracking ? "tracked" : "non-tracked";
-	
+	std::string t_name = F.nthr == 1 ? "thread" : "threads";
+	std::string tr_tmp = F.Tracking ? "tracked" : "non-tracked";
+
 	std::cout << "\n******************************************************" << std::endl;
 	std::cout << "\nWelcome to the \u03B3\u03B3/\u03B3 analysis tool \033[1;31mcompY\033[0m" << std::endl;
 	std::cout << "\n======================================================" << std::endl;
-	std::cout << "Running program with " << nthr << " " << t_name << std::endl;
-	std::cout << "FWHM set to: " << fwhm << " mm" <<  std::endl;
-	std::cout << "File Offset: " << offset << std::endl;
-	std::cout << "Acceptance Level: " << mtrack << "\u03C3" << std::endl;
+	std::cout << "Running program with " << F.nthr << " " << t_name << std::endl;
+	std::cout << "FWHM set to: " << F.fwhm << " mm" << std::endl;
+	std::cout << "File Offset: " << F.offset << std::endl;
+	std::cout << "Acceptance Level: " << F.MAX_TRACK << "\u03C3" << std::endl;
 	std::cout << "Interested in " << tr_tmp << " gammas" << std::endl;
-	if(SkipHandler) std::cout << "Skipping DataHandlers" << std::endl;
-	if(SkipTracker) std::cout << "Skipping Trackers" << std::endl;
-	if(!NoG) std::cout << "Saving Input <-> Output correlated files " << std::endl;
-	if(MG_mg) std::cout << "Analyzing all measured gammas per thread" << std::endl;
-	else std::cout << "Analyzing <= " << ((double) maxG)/1000000. << "e6 measured gammas per thread" << std::endl;
-	if(CRange < 1) std::cout << "Suppression of Multi-hit Convolution set to " << CRange << std::endl;
-	if(!Smear) std::cout << "No Gaussian smearing of data" << std::endl;
-	if(Force)
+	if (F.SkipHandler)
+		std::cout << "Skipping DataHandlers" << std::endl;
+	if (F.SkipTracker)
+		std::cout << "Skipping Trackers" << std::endl;
+	if (!F.NoG)
+		std::cout << "Saving Input <-> Output correlated files " << std::endl;
+	if (MG_mg)
+		std::cout << "Analyzing all measured gammas per thread" << std::endl;
+	else
+		std::cout << "Analyzing <= " << ((double)F.maxG) / 1000000. << "e6 measured gammas per thread" << std::endl;
+	if (F.CRange < 1)
+		std::cout << "Suppression of Multi-hit Convolution set to " << F.CRange << std::endl;
+	if (!F.Smear)
+		std::cout << "No Gaussian smearing of data" << std::endl;
+	if (F.Force)
 	{
-		if(MC_Calc) std::cout << "Using Monte Carlo based error propagation" << std::endl;
+		if (F.MC_Calc)
+			std::cout << "Using Monte Carlo based error propagation" << std::endl;
 		else std::cout << "Using Gaussian error propagation of " << order_string << std::endl;
 	}
 	else std::cout << "Mixing of Monte Carlo and Gaussian error propagation" << std::endl;
-	if(GANIL) std::cout << "Analyzing 137 Cs run of e673 at GANIL" << std::endl;
+	if (F.GANIL)
+		std::cout << "Analyzing 137 Cs run of e673 at GANIL" << std::endl;
 	std::cout << "------------------------------------------------------" << std::endl;
-	std::cout << "Data in " << (type ? d_or_s[1] : d_or_s[0]) << " mode" << std::endl;
+	std::cout << "Data in " << (F.type ? d_or_s[1] : d_or_s[0]) << " mode" << std::endl;
 	std::cout << "======================================================" << std::endl;
 }
 
@@ -311,13 +346,7 @@ void PrintHelp(){
 
 //--------------------------------------------------------------
 
-void FlagChecker(int argc,char** argv,int &nthr,int &amount_of_sets,
-				int &offset,double &CRange,int &maxG,double &fwhm,
-				bool &fwhm_flag,bool &type,bool &thr_flag,bool &file_flag,
-				bool &track_flag,bool &offset_flag,bool &Tracking,
-				bool &SkipHandler,bool &SkipTracker,bool &maxG_B,bool &NoG,
-				bool &CRange_F,double &MAX_TRACK,bool &helpCalled,bool &Smear,
-				bool &MC_Calc,int &order,bool &Force,bool &GANIL)
+void FlagChecker(int argc,char** argv,FlagsAndVals &F)
 {	
 	bool OrderFlag = false;
 
@@ -325,127 +354,135 @@ void FlagChecker(int argc,char** argv,int &nthr,int &amount_of_sets,
 		
 		if(std::string(argv[i]) == "-h"){
 			PrintHelp();
-			helpCalled = true;
+			F.helpCalled = true;
 			return;
 		}
 		
 		if(std::string(argv[i]) == "-f"){
-			fwhm_flag = true;
+			F.fwhm_flag = true;
 			continue;
 		}
-		if(fwhm_flag){
-			fwhm = std::stod(std::string(argv[i]));
-			fwhm_flag = false;
+		if (F.fwhm_flag)
+		{
+			F.fwhm = std::stod(std::string(argv[i]));
+			F.fwhm_flag = false;
 			continue;
 		}
 		if(std::string(argv[i]) == "-d"){
-			type = true;
+			F.type = true;
 			continue;
 		}
 		if(std::string(argv[i]) == "-s"){
-			type = false;
+			F.type = false;
 			continue;
 		}
 		if(std::string(argv[i]) == "-t"){
-			thr_flag = true;
+			F.thr_flag = true;
 			continue;
 		}
-		if(thr_flag){
-			nthr = std::stoi(std::string(argv[i]));
-			thr_flag = false;
+		if (F.thr_flag)
+		{
+			F.nthr = std::stoi(std::string(argv[i]));
+			F.thr_flag = false;
 			continue;
 		}
 
 		if(std::string(argv[i]) == "-x"){
-			file_flag = true;
+			F.file_flag = true;
 			continue;
 		}
-		if(file_flag){
-			amount_of_sets = std::stoi(std::string(argv[i]));
-			file_flag = false;
+		if (F.file_flag)
+		{
+			F.amount_of_sets = std::stoi(std::string(argv[i]));
+			F.file_flag = false;
 			continue;
 		}
 		if(std::string(argv[i]) == "-o"){
-			offset_flag = true;
+			F.offset_flag = true;
 			continue;
 		}
-		if(offset_flag){
-			offset = std::stoi(std::string(argv[i]));
-			offset_flag = false;
+		if (F.offset_flag)
+		{
+			F.offset = std::stoi(std::string(argv[i]));
+			F.offset_flag = false;
 			continue;
 		}
 		if(std::string(argv[i]) == "-m"){
-			track_flag = true;
+			F.track_flag = true;
 			continue;
 		}
-		if(track_flag){
-			MAX_TRACK = std::stod(std::string(argv[i]));
-			track_flag = false;
+		if (F.track_flag)
+		{
+			F.MAX_TRACK = std::stod(std::string(argv[i]));
+			F.track_flag = false;
 			continue;
 		}
 		
 		if(std::string(argv[i]) == "-T"){
-			Tracking = true;
+			F.Tracking = true;
 			continue;
 		}
 		
 		if(std::string(argv[i]) == "-sH"){
-			SkipHandler = true;
+			F.SkipHandler = true;
 			continue;
 		}
 		if(std::string(argv[i]) == "-sT"){
-			SkipTracker = true;
+			F.SkipTracker = true;
 			continue;
 		}
 
 		if(std::string(argv[i]) == "-mG"){
-			maxG_B = true;
+			F.maxG_B = true;
 			continue;
 		}
 
-		if(maxG_B){
-			maxG = std::stoi(std::string(argv[i]));
-			maxG_B = false;
+		if (F.maxG_B)
+		{
+			F.maxG = std::stoi(std::string(argv[i]));
+			F.maxG_B = false;
 			continue;
 		}
 		if(std::string(argv[i]) == "-sG"){
-			NoG = false;
+			F.NoG = false;
 			continue;
 		}
 		if(std::string(argv[i]) == "-C"){
-			CRange_F = true;
+			F.CRange_F = true;
 			continue;
 		}
 
-		if(CRange_F){
-			CRange = std::stod(std::string(argv[i]));
-			CRange_F = false;
+		if (F.CRange_F)
+		{
+			F.CRange = std::stod(std::string(argv[i]));
+			F.CRange_F = false;
 			continue;
 		}
 		if(std::string(argv[i]) == "-nS"){
-			Smear = false;
+			F.Smear = false;
 			continue;
 		}
 		if(std::string(argv[i]) == "-MC"){
-			MC_Calc = true;
+			F.MC_Calc = true;
 			continue;
 		}
 		if(std::string(argv[i]) == "-fP"){
-			Force = false;
+			F.Force = false;
 			continue;
 		}
 		if(std::string(argv[i]) == "-oE"){
 			OrderFlag = true;
 			continue;
 		}
-		if(OrderFlag){
-			order = std::stoi(std::string(argv[i]));
+		if (OrderFlag)
+		{
+			F.order = std::stoi(std::string(argv[i]));
 			OrderFlag = false;
 			continue;
 		}
 		if (std::string(argv[i]) == "-G")
 		{
-			GANIL = true;
+			F.GANIL = true;
 			continue;
 		}
 	}

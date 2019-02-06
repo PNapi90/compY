@@ -16,14 +16,14 @@ PsiMerger::PsiMerger(int _E,
     else
     {
         folderName = "EGamma_" + std::to_string(E) + "/";
-        Ebins = (int)(E/25) + 1;
+        Ebins = (int)(E/4) + 1;
     }
     Histograms = std::vector<std::vector<std::vector<int>>>(150,
                  std::vector<std::vector<int>>(Ebins,
                  std::vector<int>(2,0)));
 
-    if(E == -999)
-        LOAD();
+
+    LOAD();
 }
 
 //--------------------------------------------------------------
@@ -70,16 +70,15 @@ void PsiMerger::LOAD()
                 DATA >> Histograms[i][j][k];
             }
         }
-
-        if (d12_i % 100 == 0 && d12_i > 0)
-        {
-            std::cout << "\t\t\t\r";
-            std::cout << "\rLoaded " << name << " E(\u03B8)-X(\u03D1) histogram";
-            std::cout.flush();
-        }
-
+        
         DATA.close();
         DATA.clear();
+    }
+    if (true)
+    {
+        std::cout << "\t\t\t\r";
+        std::cout << "\rLoaded " << folder << " E(\u03B8)-X(\u03D1) histograms";
+        std::cout.flush();
     }
 }
 

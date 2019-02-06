@@ -278,8 +278,8 @@ void DataHandler::LOAD_GANIL()
 
 	for (int i = 0; i < 1; ++i)
 	{
-		//name = "Gamma_GANIL/DATA_REAL/FOR_MC";
-		name = "Gamma_GANIL/GammaEvents.GANIL";
+		name = "Gamma_GANIL/DATA_REAL/FOR_MC";
+		//name = "Gamma_GANIL/GammaEvents.GANIL";
 		file.open(name);
 		if (file.fail())
 		{
