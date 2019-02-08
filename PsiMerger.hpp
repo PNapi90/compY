@@ -16,6 +16,8 @@ private:
 
     std::string folderName;
 
+    bool debug;
+
     int d0,E,Ebins;
     std::vector < std::vector<std::vector<int>>> Histograms;
 
@@ -23,7 +25,8 @@ private:
 
 public:
     PsiMerger(int _E,
-              int _d0);
+              int _d0,
+              bool _debug);
     ~PsiMerger();
 
     bool GetP(int d12_i,

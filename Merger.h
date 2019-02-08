@@ -23,7 +23,11 @@ private:
 	bool type;
 
 public:
-	Merger(int,bool,int*,int,double);
+	Merger(int am_thr,
+		   bool type,
+		   std::vector<int> &from_To,
+		   int fileOffset,
+		   double _FWHM);
 	~Merger();
 
 	void LOAD();

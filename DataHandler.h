@@ -65,10 +65,19 @@ private:
 	inline std::string EndingName(int);
 
 public:
-	DataHandler(int*,bool,double,int,int,unsigned int,bool,double,int,bool);
-	~DataHandler();
+    DataHandler(std::vector<int> &range,
+			    bool type,
+			    double FWHM,
+			    int thr_num,
+			    int maxG,
+			    unsigned int SEED,
+			    bool NoG,
+			    double CRange,
+			    int SMEAR,
+			    bool GANIL);
+    ~DataHandler();
 
-	std::thread threading();
+    std::thread threading();
 
 };
 

@@ -9,7 +9,11 @@
 
 //--------------------------------------------------------------
 
-GammaScraper::GammaScraper(int* range,bool type,int thr_num,bool NoG) {
+GammaScraper::GammaScraper(std::vector<int> &range,
+						   bool type,
+						   int thr_num,
+						   bool NoG) 
+{
 	
 	this->NoG = NoG;
 	this->thr_num = thr_num;

@@ -3,7 +3,7 @@
 
 //-------------------------------------------------------------------------------------------
 
-DataHandler::DataHandler(int* range,
+DataHandler::DataHandler(std::vector<int> &range,
 						 bool type,
 						 double FWHM,
 						 int thr_num,
@@ -27,8 +27,9 @@ DataHandler::DataHandler(int* range,
 	m_iter = 0;
 	double_gam_counter = 0;
 	this->type = type;
-	this->range = std::vector<int>(2);
-	for(int i = 0;i < 2;++i) this->range[i] = range[i];
+	this->range = std::vector<int>(2,0);
+	for(int i = 0;i < 2;++i) 
+		this->range[i] = range[i];
 	gamma_iter = 0;
 	E0 = 0;
 

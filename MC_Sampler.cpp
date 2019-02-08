@@ -2,8 +2,9 @@
 
 //--------------------------------------------------------------
 
-MC_Sampler::MC_Sampler(Binnings &Bins)
-    : U(Bins),
+MC_Sampler::MC_Sampler(Binnings &Bins,
+                       bool _debug)
+    : U(Bins,_debug),
       binningD(Bins.nBins_d0),
       MC_Calc(Bins.MC_Calc)
 {
@@ -19,8 +20,8 @@ MC_Sampler::MC_Sampler(Binnings &Bins)
     
         for(int i = 0;i < nPsiE;++i)
         {   
-            Etmp = (i+1)*25;
-            Energies.push_back(std::make_shared<EnergyParser>(Etmp, binningD));
+            Etmp = (i+1)*binningE;
+            Energies.push_back(std::make_shared<EnergyParser>(Etmp, binningD,_debug));
         }
 
         std::cout << std::endl;
@@ -36,7 +37,8 @@ MC_Sampler::~MC_Sampler()
 
 //--------------------------------------------------------------
 
-double MC_Sampler::GetPValue(std::vector<int> &binsArray,double thetaX)
+double MC_Sampler::GetPValue(std::vector<int> &binsArray,
+                             double thetaX)
 {
     std::lock_guard<std::mutex> LOCK(MUTEX);
     double P = U.Call(binsArray,thetaX);

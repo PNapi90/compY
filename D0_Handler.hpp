@@ -24,7 +24,8 @@ public:
              int _nBins_d12,
              double sigmaX,
              int _nBins_Hist,
-             int _nBins_theta);
+             int _nBins_theta,
+             bool _debug);
   ~D0_Handler();
 
   bool Check_Loader();

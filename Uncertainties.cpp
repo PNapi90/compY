@@ -2,7 +2,8 @@
 
 //--------------------------------------------------------------
 
-Uncertainties::Uncertainties(Binnings &Bins)
+Uncertainties::Uncertainties(Binnings &Bins,
+                             bool _debug)
     : nBins_d0(Bins.nBins_d0),
       nBins_d12(Bins.nBins_d12),
       nBins_theta(Bins.nBins_theta),
@@ -24,8 +25,8 @@ Uncertainties::Uncertainties(Binnings &Bins)
         for(int i = 0;i < nBins_d0;++i)
         {
             d0_bins = i*factor_d0;
-            PSIs.push_back(std::make_shared<PsiMerger>(-999,d0_bins));
-            D0s.push_back(std::make_shared<D0_Handler>(d0_bins,nBins_d12,Bins.sigmaX,nBins_Hist,nBins_theta));
+            PSIs.push_back(std::make_shared<PsiMerger>(-999,d0_bins,_debug));
+            D0s.push_back(std::make_shared<D0_Handler>(d0_bins,nBins_d12,Bins.sigmaX,nBins_Hist,nBins_theta,_debug));
         }
         D0s_Called = std::vector<bool>(nBins_d0,false); 
 

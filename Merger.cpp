@@ -9,7 +9,12 @@
 
 //--------------------------------------------------------------
 
-Merger::Merger(int am_thr,bool type,int* from_To,int fileOffset,double _FWHM) : FWHM(_FWHM)
+Merger::Merger(int am_thr,
+			   bool type,
+			   std::vector<int> &from_To,
+			   int fileOffset,
+			   double _FWHM)
+	: FWHM(_FWHM)
 {
 	this->am_thr = am_thr;
 	this->type = type;
@@ -72,7 +77,7 @@ void Merger::print_am()
 
 	double Rel = ((double) merged)/((double) am_lines);
 
-	std::cout << "Untracked \u03B3s -> " << am_lines << std::endl;
+	std::cout << "Remaining \u03B3s -> " << am_lines << std::endl;
 	std::cout << "Merged -> " << merged << std::endl;
 	std::cout << "Relative -> " << Rel << std::endl;
 }

@@ -83,11 +83,12 @@ private:
 	inline int Factorial(int);
 	inline double Gaussian(double);
 	inline double Exponential(double);
+	inline bool BinCheck(std::vector<double> &Tmp);
 
 
 
 public:
-  GammaTracker(int *range,
+  GammaTracker(std::vector<int> &range,
 			   bool type,
 			   double FWHM,
 			   int MAX_ITER,

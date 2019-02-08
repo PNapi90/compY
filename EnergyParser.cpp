@@ -3,7 +3,8 @@
 //--------------------------------------------------------------
 
 EnergyParser::EnergyParser(int _EnergyBin,
-                           int _nBins_d0)
+                           int _nBins_d0,
+                           bool _debug)
     : EnergyBin(_EnergyBin),
       nBins_d0(_nBins_d0)
 {
@@ -16,7 +17,7 @@ EnergyParser::EnergyParser(int _EnergyBin,
     for(int i = 0;i < nBins_d0;++i)
     {
         d0_tmp = i*factor_d0;
-        PSIs.push_back(std::make_shared<PsiMerger>(EnergyBin,d0_tmp));
+        PSIs.push_back(std::make_shared<PsiMerger>(EnergyBin,d0_tmp,_debug));
     }
 }
 

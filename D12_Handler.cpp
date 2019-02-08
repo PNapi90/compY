@@ -6,12 +6,14 @@ D12_Handler::D12_Handler(int _d0_i,
                          int _d12_i,
                          int _nBins_theta,
                          int _nBins_Hist,
-                         double _SigmaX) 
+                         double _SigmaX,
+                         bool _debug) 
     : d0_i(_d0_i) ,
       d12_i(_d12_i) , 
       nBins_theta(_nBins_theta) ,
       nBins_Hist(_nBins_Hist) , 
-      SigmaX(_SigmaX)
+      SigmaX(_SigmaX),
+      debug(_debug)
 {
     refactor_d0 = 1;
     refactor_d12 = 1;
@@ -30,6 +32,10 @@ void D12_Handler::LOAD(){
     //only create Histogram array if not created before
     Histogram = std::vector<std::vector<double> >(nBins_theta,std::vector<double>(nBins_Hist,0));
     Maxima = std::vector<double>(nBins_theta,0);
+
+    //if debug mode, no histograms are loaded!
+    if(debug)
+        return;
 
     //load histograms from specific file
     std::string d0Folder = Getd0Folder();

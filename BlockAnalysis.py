@@ -106,16 +106,24 @@ plt.xlim([0.65,2.25])
 plt.ylim([0,1.5*100])
 #plt.xticks(1, ('')) 
 #plt.xlabel("",fontsize=20)
-plt.ylabel("Rel. Reconstructed Photons in $\\%$",fontsize = 16)
+plt.ylabel("Rel. Reconstructed Photons ($\\%$)",fontsize = 16)
 #plt.set_ylabel("hellp")
 plt.legend(loc=2,fontsize=12)
 #plt.ylim([0,1.10])
-label = ["$\\xi = 0.73$", "$\\xi_1 = 106.9\\,\\%$", "$\\xi_2 = 17.5\\,\\%$"]
+label = ["$\\xi = 0.73$", "$\\xi_1 = 126.5\\,\\%$", "$\\xi_2 = 17.5\\,\\%$"]
 label2 = ["$\\delta_F = 0.73$", "$\\delta_F = 0.40$", "$\\varepsilon = 0.70$"]
 
 #plt.text(x = x1 + 0.2 , y = 1+0.08, s = label[0], size = 14,ha='center', va='center')
 plt.text(x = (xs[0]+xs[1])/2 , y = 100+0.08*100, s = label[1], size = 14,ha='center', va='center')
 plt.text(x = (xs[1]+xs[2])/2 , y = 100+0.08*100, s = label[2], size = 14,ha='center', va='center')
+
+delta = 8
+
+plt.text(x = (xs[0]) , y = 27-delta, s = "$26.6\\,\\%$", size = 17,ha='center', va='center',color="w")
+plt.text(x = (xs[1]) , y = 60-delta, s = "$60.3\\,\\%$", size = 17,ha='center', va='center',color="w")
+plt.text(x = (xs[2]) , y = 71-delta, s = "$70.9\\,\\%$", size = 17,ha='center', va='center',color="w")
+
+
 
 delta = xs[1] - 0.075 -xs[0]-0.075
 

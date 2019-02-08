@@ -17,6 +17,7 @@ class EnergyParser
 {
 private:
     
+    bool debug;
     int EnergyBin,nBins_d0,factor_d0;
 
     std::vector<std::shared_ptr<PsiMerger> > PSIs;
@@ -24,7 +25,8 @@ private:
 
 public:
     EnergyParser(int _EnergyBin,
-                 int _nBins_d0);
+                 int _nBins_d0,
+                 bool _debug);
     ~EnergyParser();
 
     bool CallIntersection(std::vector<int> &binsArray,

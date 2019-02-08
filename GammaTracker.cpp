@@ -9,7 +9,7 @@
 
 //--------------------------------------------------------------
 
-GammaTracker::GammaTracker(int* range,
+GammaTracker::GammaTracker(std::vector<int> &range,
 						   bool type,
 						   double FWHM,
 						   int MAX_ITER,
@@ -34,7 +34,7 @@ GammaTracker::GammaTracker(int* range,
 	this->Track = Track;
 	this->thr_num = thr_num;
 	this->type = type;
-	this->range = std::vector<int>(2);
+	this->range = std::vector<int>(2,0);
 	for(int i = 0;i < 2;++i) this->range[i] = range[i];
 
 	binningFactor = (600/this->MC->GetBinning());
@@ -393,13 +393,17 @@ bool GammaTracker::Tracking(int iter,int pos_d)
 	//Permutations of all convoluted points
 	do
 	{
-		if(!GANIL) Estart = type ? Egamma_D[pos_d] : Egamma;
-		else Estart = 661.7;
+		if(!GANIL)
+			Estart = type ? Egamma_D[pos_d] : Egamma;
+		else 
+			Estart = 661.7;
+		
 		delta_tmp = 0;
 		delta_arr[perm_iter] = 0;
 		PValue = 0;
 
-		for(int i = 0;i < iter;++i) edeps[i] = GammaBuffer[sortarray[i]][0];
+		for(int i = 0;i < iter;++i)
+			edeps[i] = GammaBuffer[sortarray[i]][0];
 	
 		GetSigmaE(edeps,iter);
 
@@ -411,12 +415,17 @@ bool GammaTracker::Tracking(int iter,int pos_d)
 		{
 			//for first point, set source position as start
 			start_val = (i == 0) ? 1 : 0;
-			if(i == 0) for(int k = 0;k < 3;++k) mu_vec[0][k] = source_vec[k];
+			
+			if(i == 0){
+				for(int k = 0;k < 3;++k)
+					mu_vec[0][k] = source_vec[k];
+			}
 
 			//set (remaining) points for scattering angle comparison
 			for(int j = start_val;j < 3;++j)
 			{
-				for(int k = 0;k < 3;++k) mu_vec[j][k] = GammaBuffer[sortarray[i+j-1]][k+1];
+				for(int k = 0;k < 3;++k)
+					mu_vec[j][k] = GammaBuffer[sortarray[i+j-1]][k+1];
 			}
 
 			//reset scattering angles (j*10000 to ensure large difference if not used)
@@ -441,7 +450,7 @@ bool GammaTracker::Tracking(int iter,int pos_d)
 					//Get intersected area
 					if (std::abs(Estart - 661.7) <= 2)
 						PValue = MC->GetIntersection_661(binsArray, thetaX, EtmpVec);	
-					else if(Estart < 275)
+					else if(Estart < 275 && BinCheck(EtmpVec))
 						PValue = MC->GetIntersection(binsArray, thetaX, EtmpVec);
 					else
 						PValue = MC->GetPValue(binsArray, thetaX);
@@ -467,14 +476,18 @@ bool GammaTracker::Tracking(int iter,int pos_d)
 			//comparison between position and energy scattering angles
 			delta_arr[perm_iter] = (delta_arr[perm_iter] <= delta_tmp) ? delta_tmp : delta_arr[perm_iter];
 
-			if(perm_iter == 0) for(int j = 0;j < 2;++j) angle_save[i][j] = angle_vec[i][j];
-
+			if(perm_iter == 0)
+			{
+				for(int j = 0;j < 2;++j)
+					angle_save[i][j] = angle_vec[i][j];
+			}
 			//set for intersection only after first iteration
 			FirstStep = false;
 
 			//if untrackable part reached -> break
 			//(no additional calculations needed for permutation)
-			if(delta_tmp >= MAX_TRACK) break;
+			if(delta_tmp >= MAX_TRACK)
+				break;
 
 			//set "incident" photon energy for next iteration
 			Estart -= GammaBuffer[sortarray[i]][0];
@@ -546,11 +559,20 @@ void GammaTracker::get_E_angle(double Estart,double Ed,int pos)
 	//only use MC if big or small angles are used
 	if(!ForceMode) 
 		MC_Calc = (std::abs(cth) >= 0.8);
-	 
-	if(cth < -1 && std::abs(Estart - 661.7) > 2)
+	
+	//skip energies above Compton edge if not simulated via MC yet
+
+	std::vector<double> EtmpVec(2, 0);
+	EtmpVec[0] = Estart;
+	EtmpVec[1] = Ed;
+
+	if (cth < -1 && std::abs(Estart - 661.7) > 2)
 	{
-		angle_vec[pos][1] = WRONG_CASE;
-		return;
+		if(Estart >= 275 || (Estart < 275 && !BinCheck(EtmpVec)))
+		{
+			angle_vec[pos][1] = WRONG_CASE;
+			return;
+		}
 	}
 
 
@@ -706,6 +728,16 @@ void GammaTracker::GetSigmaE(std::vector<double> &Edeps,int len)
 		
 		sigma_Eth[i] = delta_cth_E[i];///sqrt(1. - pow(cth_E[i],2));
 	}
+}
+
+//--------------------------------------------------------------
+
+inline bool GammaTracker::BinCheck(std::vector<double> &Tmp)
+{
+	int a = (int) Tmp[0]/25;
+	int b = (int) Tmp[1]/25;
+
+	return (a - b) > 0;
 }
 
 //--------------------------------------------------------------

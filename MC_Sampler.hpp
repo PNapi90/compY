@@ -23,7 +23,8 @@ private:
 
 public:
     
-    MC_Sampler(Binnings &Bins);
+    MC_Sampler(Binnings &Bins,
+               bool _debug);
     ~MC_Sampler();
     
     double GetPValue(std::vector<int> &binsArray,

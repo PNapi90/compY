@@ -51,8 +51,8 @@ struct FlagsAndVals
 	int order = 1;
 	bool Force = true;
 	bool GANIL = false;
-
 	double MAX_TRACK = 3.;
+	bool debug = false;
 };
 
 
@@ -64,7 +64,9 @@ void PrintCouts(FlagsAndVals &F);
 
 void PrintHelp();
 
-void getSets(int*,const int,const int);
+void getSets(std::vector<int> &sets,
+			 const int nthr,
+			 const int amount);
 
 void SetBins(Binnings &Bins);
 
@@ -94,10 +96,16 @@ int main(int argc, char **argv)
 		F.CRange = 0;
 	}
 
+	if (F.debug)
+	{
+		F.nthr = 1;
+		F.Tracking = true;
+	}
+
 	PrintCouts(F);
 
 
-	int* sets = new int[2];
+	std::vector<int> sets(2,0);
 
 	if (F.nthr >= F.amount_of_sets)
 		F.nthr = F.amount_of_sets;
@@ -109,9 +117,9 @@ int main(int argc, char **argv)
 
 	int set_begin = 0;
 	int set_end = 0;
-	int* from_to = new int[2];
-	for(int i = 0;i < 2;++i) from_to[i] = 0;
-
+	
+	std::vector<int> from_to(2,0);
+	
 	std::vector<std::shared_ptr<DataHandler>> Handlers;
 	std::vector<std::shared_ptr<GammaTracker>> Tracker;
 	std::vector<std::shared_ptr<GammaScraper>> Scraper;
@@ -130,7 +138,7 @@ int main(int argc, char **argv)
 	Bins.MC_Calc = F.MC_Calc;
 	Bins.sigmaX = F.fwhm;
 
-	MC_Sampler* MC = new MC_Sampler(Bins);
+	MC_Sampler MC(Bins,F.debug);
 
 	for (int i = 0; i < F.nthr - 1; ++i)
 	{
@@ -153,7 +161,7 @@ int main(int argc, char **argv)
 		if (!F.SkipTracker)
 			Tracker.push_back(std::make_shared<GammaTracker>(from_to, F.type, F.fwhm,
 															 MAX_ITER, F.MAX_TRACK, i,
-															 F.Tracking, MC, F.MC_Calc,
+															 F.Tracking, &MC, F.MC_Calc,
 															 F.order, F.Force, false));
 
 		Scraper.push_back(std::make_shared<GammaScraper>(from_to, F.type, i, F.NoG));
@@ -169,7 +177,7 @@ int main(int argc, char **argv)
 	if (!F.SkipTracker)
 		Tracker.push_back(std::make_shared<GammaTracker>(from_to, F.type, F.fwhm,
 														 MAX_ITER, F.MAX_TRACK, F.nthr - 1,
-														 F.Tracking, MC, F.MC_Calc,
+														 F.Tracking, &MC, F.MC_Calc,
 														 F.order, F.Force, false));
 
 	Scraper.push_back(std::make_shared<GammaScraper>(from_to, F.type, F.nthr - 1, F.NoG));
@@ -221,12 +229,8 @@ int main(int argc, char **argv)
 
 	from_to[0] = F.offset;
 	from_to[1] = F.offset + F.amount_of_sets;
+	
 	Merger Merge(F.nthr, F.type, from_to, F.offset, F.fwhm);
-
-	delete[] sets;
-	delete[] from_to;
-	sets = nullptr;
-	from_to = nullptr;
 	
 	std::cout << "Merger: done" << std::endl;
 	std::cout << "*****************" << std::endl;
@@ -234,8 +238,6 @@ int main(int argc, char **argv)
 	Merge.print_am();
 	std::cout << "Scraped Gammas: " << scrapped << std::endl;
 	std::cout << "*****************" << std::endl;
-
-    delete MC;
     
 	return 0;
 }
@@ -288,6 +290,8 @@ void PrintCouts(FlagsAndVals &F)
 	else std::cout << "Mixing of Monte Carlo and Gaussian error propagation" << std::endl;
 	if (F.GANIL)
 		std::cout << "Analyzing 137 Cs run of e673 at GANIL" << std::endl;
+	if(F.debug)
+		std::cout << "!!!RUNNING IN DEBUG MODE => NO SENSIBLE TRACKING!!!" << std::endl;
 	std::cout << "------------------------------------------------------" << std::endl;
 	std::cout << "Data in " << (F.type ? d_or_s[1] : d_or_s[0]) << " mode" << std::endl;
 	std::cout << "======================================================" << std::endl;
@@ -295,7 +299,10 @@ void PrintCouts(FlagsAndVals &F)
 
 //--------------------------------------------------------------
 
-void getSets(int* sets,const int nthr,const int amount){
+void getSets(std::vector<int> &sets,
+			 const int nthr,
+			 const int amount)
+{
 	sets[0] = 0;
 	sets[1] = 0;
 
@@ -339,6 +346,7 @@ void PrintHelp(){
 	std::cout << "\t -oE n \t set n as order of error propagation (1 or 2)" << std::endl;
 	std::cout << "\t -fP \t don't force used error propagation method" << std::endl;
 	std::cout << "\t -G \t analyze 137 Cs run of e673 experiment at GANIL (May/June 2017)" << std::endl;
+	std::cout << "\t -db \t enable debugging mode -> no histograms are loaded" << std::endl;
 	std::cout << "\t -h \t prints this message" << std::endl; 
 	std::cout << "-------------------------------------------------------------------" << std::endl;
 	std::cout << std::endl;
@@ -483,6 +491,11 @@ void FlagChecker(int argc,char** argv,FlagsAndVals &F)
 		if (std::string(argv[i]) == "-G")
 		{
 			F.GANIL = true;
+			continue;
+		}
+		if (std::string(argv[i]) == "-db")
+		{
+			F.debug = true;
 			continue;
 		}
 	}

@@ -35,7 +35,8 @@ private:
     ComptonHandler EComp;
 
 public:
-    Uncertainties(Binnings &Bins);
+    Uncertainties(Binnings &Bins,
+                  bool _debug);
 
     ~Uncertainties();
 

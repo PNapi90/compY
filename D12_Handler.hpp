@@ -16,6 +16,7 @@ private:
 
     double SigmaX;
 
+    bool debug;
     int d0_i,d12_i;
     int nBins_theta,nBins_Hist;
 
@@ -30,9 +31,12 @@ private:
 
  
 public:
-    D12_Handler(int _d0_i,int _d12_i,
-                int _nBins_theta,int _nBins_Hist,
-                double _SigmaX);
+    D12_Handler(int _d0_i,
+                int _d12_i,
+                int _nBins_theta,
+                int _nBins_Hist,
+                double _SigmaX,
+                bool _debug);
     ~D12_Handler();
     
     double GetPValue(int theta_Ei,double thetaX);

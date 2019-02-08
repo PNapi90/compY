@@ -9,7 +9,7 @@ from matplotlib import rc
 rc('text', usetex=True)
 
 
-dataN = np.loadtxt("OutputFolder/Output_FWHM_5.000000_0_1")
+dataN = np.loadtxt("OutputFolder/ONon")
 data = np.loadtxt("OutputFolder/Output_FWHM_5.000000_0_1_2inter")
 data2 = np.loadtxt("Gamma_GANIL/OFT_2Ints.dat")
 data3 = np.loadtxt("Gamma_GANIL/All_2Ints.dat")
@@ -37,7 +37,7 @@ names = ["MC", "OFT", "OFT+MC"]
 values = [x1+widthB/2,x2+widthB/2,x3+widthB/2]
 
 
-nbins = 700//4
+nbins = 700
 
 fig = plt.figure(1,figsize=(5,3))
 plt.clf()
@@ -49,7 +49,7 @@ plt.hist(dataN[:,2],bins=nbins,range=[0,700],histtype="step",color="orange",labe
 
 plt.tick_params(axis='both', which='major', labelsize=15)
 plt.tick_params(axis='both', which='minor', labelsize=10) 
-plt.xlabel("$E_{\\mathrm{dep},1}$ in keV",fontsize=17)
+plt.xlabel("$E_{\\mathrm{dep},1}$ (keV)",fontsize=17)
 
 plt.ylabel("Counts per 4 keV",fontsize = 17)
 
@@ -58,13 +58,19 @@ plt.xlim([0,660])
 
 
 a = plt.axes([.194, .45, .31, .33], facecolor='w')
-plt.title("Rel. Reconstructed Photons in $\\%$",fontsize=10)
+plt.title("Rel. Reconstructed Photons ($\\%$)",fontsize=10)
 plt.bar(x1,100-bar1,width=widthB,color="orange",align="edge",alpha=1,edgecolor="k")
 plt.bar(x2,100-bar2,width=widthB,color="r",align="edge",alpha=1,edgecolor="k")
 plt.bar(x3,100-bar3,width=widthB,color="royalblue",align="edge",alpha=1,edgecolor="k")
 plt.bar(x1,bar1,width=widthB,color="orange",align="edge",hatch="/",alpha = 0.4,bottom=100-bar1,edgecolor="k")
 plt.bar(x2,bar2,width=widthB,color="r",align="edge",hatch="/",alpha = 0.4,bottom=100-bar2,edgecolor="k")
 plt.bar(x3,bar3,width=widthB,color="royalblue",align="edge",hatch="/",alpha = 0.4,bottom=100-bar3,edgecolor="k")
+
+delta = 15
+
+plt.text(x = values[0] , y = 100-bar1-delta, s = "$81\\,\\%$", size = 18,ha='center', va='center',color="w",rotation=90)
+plt.text(x = values[1] , y = 100-bar2-delta, s = "$79\\,\\%$", size = 18,ha='center', va='center',color="w",rotation=90)
+plt.text(x = values[2] , y = 100-bar3-delta, s = "$96\\,\\%$", size = 18,ha='center', va='center',color="w",rotation=90)
 #plt.axhline(100,color="k",ls="--",lw=1.2)
 
 plt.xticks(values,names,fontsize=10)
@@ -101,7 +107,7 @@ plt.clf()
 plt.hist(data3,bins=nbins,range=[0,700],histtype="step",color="k",label="OFT")
 plt.tick_params(axis='both', which='major', labelsize=15)
 plt.tick_params(axis='both', which='minor', labelsize=10) 
-plt.xlabel("$E_{\\mathrm{dep},1}$ in keV",fontsize=17)
+plt.xlabel("$E_{\\mathrm{dep},1}$ (keV)",fontsize=17)
 
 plt.ylabel("Counts per 4 keV",fontsize = 17)
 plt.xlim([0,660])

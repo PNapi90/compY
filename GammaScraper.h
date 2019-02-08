@@ -51,7 +51,10 @@ private:
 	void tmpFileWrite(double,double);
 
 public:
-	GammaScraper(int*,bool,int,bool);
+	GammaScraper(std::vector<int> &range,
+				 bool type,
+				 int thr_num,
+				 bool NoG);
 	~GammaScraper();
 
 	std::thread threading();
