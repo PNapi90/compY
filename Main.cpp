@@ -53,6 +53,7 @@ struct FlagsAndVals
 	bool GANIL = false;
 	double MAX_TRACK = 3.;
 	bool debug = false;
+	bool OFT = false;
 };
 
 
@@ -100,6 +101,11 @@ int main(int argc, char **argv)
 	{
 		F.nthr = 1;
 		F.Tracking = true;
+	}
+
+	if(F.OFT)
+	{
+		F.MC_Calc = false;
 	}
 
 	PrintCouts(F);
@@ -156,7 +162,8 @@ int main(int argc, char **argv)
 		if (!F.SkipHandler)
 			Handlers.push_back(std::make_shared<DataHandler>(from_to, F.type, F.fwhm,
 															 i, F.maxG, ((unsigned int)i),
-															 F.NoG, F.CRange, ((int)F.Smear * 1), F.GANIL));
+															 F.NoG, F.CRange, ((int)F.Smear * 1), 
+															 F.GANIL,F.OFT));
 
 		if (!F.SkipTracker)
 			Tracker.push_back(std::make_shared<GammaTracker>(from_to, F.type, F.fwhm,
@@ -173,7 +180,7 @@ int main(int argc, char **argv)
 	if (!F.SkipHandler)
 		Handlers.push_back(std::make_shared<DataHandler>(from_to, F.type, F.fwhm,
 														 F.nthr - 1, F.maxG, (unsigned int)F.nthr - 1,
-														 F.NoG, F.CRange, ((int)F.Smear * 1), F.GANIL));
+														 F.NoG, F.CRange, ((int)F.Smear * 1), F.GANIL, F.OFT));
 	if (!F.SkipTracker)
 		Tracker.push_back(std::make_shared<GammaTracker>(from_to, F.type, F.fwhm,
 														 MAX_ITER, F.MAX_TRACK, F.nthr - 1,
@@ -197,27 +204,35 @@ int main(int argc, char **argv)
 	std::cout << "Handlers: done" << std::endl;
 	std::cout << "-----------------" << std::endl;
 
+	
+
 	if (!F.SkipTracker)
 	{
-		for (int i = 0; i < F.nthr; ++i)
-			t[i] = Tracker[i]->threading();
-		for (int i = 0; i < F.nthr; ++i)
-			t[i].join();
-
+		if(!F.OFT)
+		{
+			for (int i = 0; i < F.nthr; ++i)
+				t[i] = Tracker[i]->threading();
+			for (int i = 0; i < F.nthr; ++i)
+				t[i].join();
+		}
 		for (int i = 0; i < F.nthr; ++i)
 			Tracker.pop_back();
 	}
 	std::cout << "Trackers: done" << std::endl;
 	std::cout << "-----------------" << std::endl;
 
-	for (int i = 0; i < F.nthr; ++i)
-		t[i] = Scraper[i]->threading();
-	for (int i = 0; i < F.nthr; ++i)
-		t[i].join();
-
 	int scrapped = 0;
-	for (int i = 0; i < F.nthr; ++i)
-		scrapped += Scraper[i]->get_in_bad_dets();
+
+	if(!F.OFT)
+	{
+		for (int i = 0; i < F.nthr; ++i)
+			t[i] = Scraper[i]->threading();
+		for (int i = 0; i < F.nthr; ++i)
+			t[i].join();
+		for (int i = 0; i < F.nthr; ++i)
+			scrapped += Scraper[i]->get_in_bad_dets();
+
+	}
 
 	for (int i = 0; i < F.nthr; ++i)
 		Scraper.pop_back();
@@ -230,15 +245,17 @@ int main(int argc, char **argv)
 	from_to[0] = F.offset;
 	from_to[1] = F.offset + F.amount_of_sets;
 	
-	Merger Merge(F.nthr, F.type, from_to, F.offset, F.fwhm);
+	if(!F.OFT)
+	{
+		Merger Merge(F.nthr, F.type, from_to, F.offset, F.fwhm);
 	
-	std::cout << "Merger: done" << std::endl;
-	std::cout << "*****************" << std::endl;
+		std::cout << "Merger: done" << std::endl;
+		std::cout << "*****************" << std::endl;
 
-	Merge.print_am();
-	std::cout << "Scraped Gammas: " << scrapped << std::endl;
-	std::cout << "*****************" << std::endl;
-    
+		Merge.print_am();
+		std::cout << "Scraped Gammas: " << scrapped << std::endl;
+		std::cout << "*****************" << std::endl;
+	}
 	return 0;
 }
 
@@ -290,8 +307,13 @@ void PrintCouts(FlagsAndVals &F)
 	else std::cout << "Mixing of Monte Carlo and Gaussian error propagation" << std::endl;
 	if (F.GANIL)
 		std::cout << "Analyzing 137 Cs run of e673 at GANIL" << std::endl;
+	if(F.OFT)
+		std::cout << "Format handled data into OFT Format" << std::endl;
 	if(F.debug)
+	{
+		std::cout << "- - - - - - - - - - - - - - - - - - - - - - - - - - -" << std::endl;
 		std::cout << "!!!RUNNING IN DEBUG MODE => NO SENSIBLE TRACKING!!!" << std::endl;
+	}
 	std::cout << "------------------------------------------------------" << std::endl;
 	std::cout << "Data in " << (F.type ? d_or_s[1] : d_or_s[0]) << " mode" << std::endl;
 	std::cout << "======================================================" << std::endl;
@@ -347,6 +369,7 @@ void PrintHelp(){
 	std::cout << "\t -fP \t don't force used error propagation method" << std::endl;
 	std::cout << "\t -G \t analyze 137 Cs run of e673 experiment at GANIL (May/June 2017)" << std::endl;
 	std::cout << "\t -db \t enable debugging mode -> no histograms are loaded" << std::endl;
+	std::cout << "\t -OFT\t generate OFT-formatted data" << std::endl;
 	std::cout << "\t -h \t prints this message" << std::endl; 
 	std::cout << "-------------------------------------------------------------------" << std::endl;
 	std::cout << std::endl;
@@ -496,6 +519,11 @@ void FlagChecker(int argc,char** argv,FlagsAndVals &F)
 		if (std::string(argv[i]) == "-db")
 		{
 			F.debug = true;
+			continue;
+		}
+		if (std::string(argv[i]) == "-OFT")
+		{
+			F.OFT = true;
 			continue;
 		}
 	}

@@ -24,6 +24,10 @@ private:
 	const char* format = "%lf %lf %lf %lf %lf %d";
 	const int max_len = 40;
 
+	const std::string TmpLine = "-1 661.7 0 0 0 0";
+
+	std::string GammaLine,oldLine;
+
 	double sigma_X,FWHM,sigma_Scale,CRange;
 	int gammaID;
 	bool type,NoG,GANIL;
@@ -31,11 +35,14 @@ private:
 
 	int maxG,am_GammasFull,SMEAR;
 
+	bool OFT;
+
 	double E0;
 
 	std::vector<int> range,gamma_iter2,TmpGammaLen;
 	std::vector<double> E0_2;
-	std::vector<std::vector<double> > Gamma,MergedData;
+	std::vector<std::vector<double>> Gamma, MergedData;
+	std::vector<std::vector<int>> Signs;
 	std::vector<std::vector<std::vector<double> > > Gamma2,TmpGamma;
 
 	std::ofstream majorFile,Etot_file,max_file,gammaTmpFile;
@@ -74,7 +81,8 @@ public:
 			    bool NoG,
 			    double CRange,
 			    int SMEAR,
-			    bool GANIL);
+			    bool GANIL,
+				bool _OFT);
     ~DataHandler();
 
     std::thread threading();

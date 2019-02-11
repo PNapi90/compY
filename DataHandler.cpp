@@ -12,8 +12,10 @@ DataHandler::DataHandler(std::vector<int> &range,
 						 bool NoG,
 						 double CRange,
 						 int SMEAR,
-						 bool GANIL) 
-	: generator(SEED) 
+						 bool GANIL,
+						 bool _OFT) 
+	: generator(SEED) ,
+	  OFT(_OFT)
 {
 	this->GANIL = GANIL;
 	this->SMEAR = SMEAR;
@@ -45,6 +47,8 @@ DataHandler::DataHandler(std::vector<int> &range,
 	E0_2 = std::vector<double>(2,0);
 	Gamma2 = std::vector<std::vector<std::vector<double> > >(2,std::vector<std::vector<double> >(max_len,std::vector<double>(4,0)));
 
+	Signs = std::vector<std::vector<int> >(1000,std::vector<int>(2,0));
+
 	Gamma = std::vector<std::vector<double> >(max_len,std::vector<double>(5,0));
 	MergedData = std::vector<std::vector<double> >(max_len,std::vector<double>(5,0));
 
@@ -54,8 +58,16 @@ DataHandler::DataHandler(std::vector<int> &range,
 	GaussX = std::normal_distribution<double>(0,sigma_X);
 
 	std::string tmpDouble = (type) ? "Double" : "";
-	std::string tmpName = "Stored/Gamma"+tmpDouble + "_" + std::to_string(range[0]) + "_" + std::to_string(range[1]) + ".rawSpec";
+	std::string tmpName;
 	
+	if(!OFT) 
+		tmpName = "Stored/Gamma"+tmpDouble + "_" + std::to_string(range[0]) + "_" + std::to_string(range[1]) + ".rawSpec";
+	else
+	{
+		tmpName = "Stored/OFT/GammaEvents_OFT." + std::to_string(range[0]) + "_" + std::to_string(range[1]);
+	}
+	
+
 	Etot_file.open("Stored/Etot.dat");
 	majorFile.open(tmpName);
 	if(thr_num == 0){
@@ -72,12 +84,12 @@ DataHandler::DataHandler(std::vector<int> &range,
 
 //-------------------------------------------------------------------------------------------
 
-DataHandler::~DataHandler() {
+DataHandler::~DataHandler() 
+{
 	majorFile.close();
 	Etot_file.close();
 	if(thr_num == 0) max_file.close();
 	if(!NoG) gammaTmpFile.close();
-
 }
 
 //-------------------------------------------------------------------------------------------
@@ -100,7 +112,8 @@ void DataHandler::LOAD(){
 	bool first_gamma = true;
 	bool skip = false;
 	int iterator = 0;
-	
+
+	int lineIter = 0;
 	for (int i = range[0]; i < range[1]; ++i) 
 	{
 		name = "Gamma_Single_Cs/GammaEvents." + EndingName(i);
@@ -112,47 +125,72 @@ void DataHandler::LOAD(){
 
 		data_coming = false;
 
-		while(std::getline(file,line,'\n') && am_GammasFull < maxG){
-			if(line[0] == '#') continue;
+		while(std::getline(file,line,'\n') && am_GammasFull < maxG)
+		{
+			if(OFT && !data_coming)
+				majorFile << line << std::endl;
+			
+			if(line[0] == '#')
+				continue;
 
-			if(line[0] == '$'){
+			if(line[0] == '$')
+			{
 				data_coming = true;
 				continue;
 			}
 
-			if(!data_coming) continue;
+			if(!data_coming)
+				continue;
 
 			std::sscanf(line.c_str(),format,&type,&E,&x[0],&x[1],&x[2],&dummy);
 			
-			if(type == -1){
+			if(type == -1)
+			{
 				E0 = E;
+				oldLine = line;
+
 				new_gamma = true;
 			}
-			else{
-				if(new_gamma) ResetGammaBuffer();
+			else
+			{	
+				if(new_gamma)
+					ResetGammaBuffer();
+
+				if(gamma_iter == 0)
+					GammaLine = oldLine;
 				
 				Gamma[gamma_iter][0] = E;
 				for(int i = 0;i < 3;++i) Gamma[gamma_iter][i+1] = x[i];
 
+				Signs[gamma_iter][0] = type;
+				Signs[gamma_iter][1] = dummy;
+
 				++gamma_iter;
 				new_gamma = false;
 			}
-			if(thr_num == 0 && iterator % 200000 == 0){
+			
+
+			if(thr_num == 0 && iterator % 200000 == 0)
+			{
 				std::cout << "\r";
 				std::cout << "Handlers: Thread 0 in File " << i << " of [" << range[0] <<"," << range[1] << ") at iteration " << iterator << "\t\t\t\t\t";
 				std::cout.flush();
 			}
 			++iterator;
-			if(tmpIter == 500){
+			
+			if(tmpIter == 500 && !OFT)
+			{
 				SaveTmp();
 				tmpIter = 0;
 			}
 		}
-		if(tmpIter > 0){
+		if(tmpIter > 0 && !OFT)
+		{
 			SaveTmp();
 			tmpIter = 0;
 		}
-		if(thr_num == 0) std::cout << std::endl;
+		if(thr_num == 0)
+			std::cout << std::endl;
 		iterator = 0;
 		file.close();
 		file.clear();
@@ -442,7 +480,8 @@ void DataHandler::MergeGammaAndSave(){
 	
 	double EnergySum = 0;
 
-	for (int i = 0; i < gamma_iter-1; ++i) {
+	for (int i = 0; i < gamma_iter-1; ++i) 
+	{
 		distance = 0;
 		for (int j = 1; j < 4; ++j) distance += pow(MergedData[m_iter][j] - Gamma[i+1][j],2);
 		distance = sqrt(distance);
@@ -456,7 +495,8 @@ void DataHandler::MergeGammaAndSave(){
 			}
 			MergedData[m_iter][0] = EnergySum;
 		}
-		else{
+		else
+		{
 			++m_iter;
 			for (int j = 0; j < 4; ++j) MergedData[m_iter][j] = Gamma[i+1][j];
 		}
@@ -500,9 +540,10 @@ inline bool DataHandler::ConvolSuppr(){
 
 //-------------------------------------------------------------------------------------------
 
-void DataHandler::SaveMerge(){
+void DataHandler::SaveMerge()
+{
 
-	if(!type){
+	if(!type && !OFT){
 		for(int i = 0;i <= m_iter;++i){
 			std::normal_distribution<double> GaussE(0,0.002/2.355*MergedData[i][0]);
 			TmpGamma[tmpIter][i][0] = MergedData[i][0] + GaussE(generator)*SMEAR;
@@ -516,19 +557,46 @@ void DataHandler::SaveMerge(){
 		++tmpIter;
 	}
 	else{
-		for (int i = 0; i <= m_iter; ++i) {
-			for (int j = 0; j < 4; ++j){
-				if(j == 0){
+		double EdTmp = 0;
+
+		if (OFT)
+			majorFile << GammaLine << std::endl;
+
+		for (int i = 0; i <= m_iter; ++i)
+		{
+			if (OFT) 
+				majorFile << "   " << Signs[i][0] << "   ";
+			
+			for (int j = 0; j < 4; ++j)
+			{
+				if(j == 0)
+				{
 					std::normal_distribution<double> GaussE(0,0.002/2.355*MergedData[i][j]);
 					MergedData[i][j] += GaussE(generator)*SMEAR;
 				}
-				else MergedData[i][j] += GaussX(generator)*SMEAR;
-
+				else 
+					MergedData[i][j] += GaussX(generator)*SMEAR;
 				majorFile << MergedData[i][j] << " ";
 			}
-			majorFile << E0 << " " <<  gamma_iter << " " << MergedData[i][4] <<std::endl;
+
+			EdTmp += MergedData[i][0];
+
+			if(!OFT)
+				majorFile << E0 << " " <<  gamma_iter << " " << MergedData[i][4] <<std::endl;
+			else
+				if(i < m_iter)
+					majorFile << 0 <<  Signs[i][1] << std::endl;
+				else
+				{
+					if(std::abs(EdTmp - 661.7) <= 2) 
+						majorFile << 0 << 2 << std::endl;
+					else
+						majorFile << 0 << Signs[i][1] << std::endl;
+				}
+				
 		}
-		SetFileEnding();
+		if(!OFT)
+			SetFileEnding();
 	}
 }
 
@@ -562,7 +630,7 @@ void DataHandler::SetFileEnding(){
 std::thread DataHandler::threading(){
 	if(!type) return std::thread(
 		[=]
-		{
+		{	
 			if(!GANIL)
 				LOAD();
 			else
