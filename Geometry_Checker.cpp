@@ -169,7 +169,7 @@ void Geometry_Checker::set_GANIL(){
     std::ifstream angle_data;
     char str[100];
     for(int i = 0;i < 3;++i){
-        sprintf(str,"inputdata/GANIL_ANGLES_%d.dat",i+1);
+        sprintf(str,"inputdata/GANIL_ANGLES_%d.Angles",i+1);
         angle_data.open(str);
 
         if(angle_data.fail()){
