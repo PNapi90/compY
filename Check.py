@@ -9,8 +9,8 @@ from matplotlib import rc
 rc('text', usetex=True)
 
 
-dataN = np.loadtxt("OutputFolder/ONon")
-data = np.loadtxt("OutputFolder/Output_FWHM_5.000000_0_1_2inter")
+dataN = np.loadtxt("OutputFolder/Out_newAppr_All2")#ONon")
+data = np.loadtxt("OutputFolder/Out_newAppr_after2")#Output_FWHM_5.000000_0_1_2inter")
 data2 = np.loadtxt("Gamma_GANIL/OFT_2Ints.dat")
 data3 = np.loadtxt("Gamma_GANIL/All_2Ints.dat")
 
@@ -33,11 +33,11 @@ bar1 = len(dataN)/len(data3)*100
 yl = [i*25 for i in range(5)]
 ylS = ["$"+str(y)+"$" for y in yl]
 
-names = ["MC", "OFT", "OFT+MC"]
+names = ["MCT", "OFT", "OFT+MCT"]
 values = [x1+widthB/2,x2+widthB/2,x3+widthB/2]
 
 
-nbins = 700
+nbins = 350
 
 fig = plt.figure(1,figsize=(5,3))
 plt.clf()
@@ -51,9 +51,9 @@ plt.tick_params(axis='both', which='major', labelsize=15)
 plt.tick_params(axis='both', which='minor', labelsize=10) 
 plt.xlabel("$E_{\\mathrm{dep},1}$ (keV)",fontsize=17)
 
-plt.ylabel("Counts per 4 keV",fontsize = 17)
+plt.ylabel("Counts per 2 keV",fontsize = 17)
 
-plt.ylim([0,25000])
+plt.ylim([0,11500])
 plt.xlim([0,660])
 
 
@@ -66,14 +66,14 @@ plt.bar(x1,bar1,width=widthB,color="orange",align="edge",hatch="/",alpha = 0.4,b
 plt.bar(x2,bar2,width=widthB,color="r",align="edge",hatch="/",alpha = 0.4,bottom=100-bar2,edgecolor="k")
 plt.bar(x3,bar3,width=widthB,color="royalblue",align="edge",hatch="/",alpha = 0.4,bottom=100-bar3,edgecolor="k")
 
-delta = 15
+delta = 10
 
-plt.text(x = values[0] , y = 100-bar1-delta, s = "$81\\,\\%$", size = 18,ha='center', va='center',color="w",rotation=90)
-plt.text(x = values[1] , y = 100-bar2-delta, s = "$79\\,\\%$", size = 18,ha='center', va='center',color="w",rotation=90)
-plt.text(x = values[2] , y = 100-bar3-delta, s = "$96\\,\\%$", size = 18,ha='center', va='center',color="w",rotation=90)
+plt.text(x = values[0] , y = 100-bar1-delta, s = "$80\\,\\%$", size = 12,ha='center', va='center',color="w",rotation=90*0)
+plt.text(x = values[1] , y = 100-bar2-delta, s = "$79\\,\\%$", size = 12,ha='center', va='center',color="w",rotation=90*0)
+plt.text(x = values[2] , y = 100-bar3-delta, s = "$96\\,\\%$", size = 12,ha='center', va='center',color="w",rotation=90*0)
 #plt.axhline(100,color="k",ls="--",lw=1.2)
 
-plt.xticks(values,names,fontsize=10)
+plt.xticks(values,names,fontsize=8)
 plt.yticks(yl,ylS)
 plt.ylim([40,105])
 
@@ -109,7 +109,7 @@ plt.tick_params(axis='both', which='major', labelsize=15)
 plt.tick_params(axis='both', which='minor', labelsize=10) 
 plt.xlabel("$E_{\\mathrm{dep},1}$ (keV)",fontsize=17)
 
-plt.ylabel("Counts per 4 keV",fontsize = 17)
+plt.ylabel("Counts per 2 keV",fontsize = 17)
 plt.xlim([0,660])
 
 plt.savefig("plotEall.pdf",bbox_inches="tight")

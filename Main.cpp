@@ -108,13 +108,15 @@ int main(int argc, char **argv)
 		F.MC_Calc = false;
 	}
 
-	PrintCouts(F);
+
 
 
 	std::vector<int> sets(2,0);
 
 	if (F.nthr >= F.amount_of_sets)
 		F.nthr = F.amount_of_sets;
+
+	PrintCouts(F);
 
 	getSets(sets, F.nthr, F.amount_of_sets);
 

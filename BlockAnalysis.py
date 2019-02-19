@@ -44,7 +44,7 @@ print(bar1,bar2,bar3)
 
 #nMC = nOFT + len(dataMC)
 
-names = ["Singles", "OFT", "OFT + MC"]
+names = ["Singles", "OFT", "OFT+MCT"]
 values = [x1+0.2,x2+0.2,x3+0.2]
 
 xs = np.array([x1,x2,x3])
