@@ -54,6 +54,7 @@ struct FlagsAndVals
 	double MAX_TRACK = 3.;
 	bool debug = false;
 	bool OFT = false;
+	bool OFT_Track = false;
 };
 
 
@@ -108,7 +109,11 @@ int main(int argc, char **argv)
 		F.MC_Calc = false;
 	}
 
-
+	if(F.OFT_Track)
+	{
+		F.SkipHandler = true;
+		F.OFT = false;
+	}
 
 
 	std::vector<int> sets(2,0);
@@ -171,7 +176,8 @@ int main(int argc, char **argv)
 			Tracker.push_back(std::make_shared<GammaTracker>(from_to, F.type, F.fwhm,
 															 MAX_ITER, F.MAX_TRACK, i,
 															 F.Tracking, &MC, F.MC_Calc,
-															 F.order, F.Force, false));
+															 F.order, F.Force, false, 
+															 F.OFT_Track));
 
 		Scraper.push_back(std::make_shared<GammaScraper>(from_to, F.type, i, F.NoG));
 	}
@@ -187,7 +193,8 @@ int main(int argc, char **argv)
 		Tracker.push_back(std::make_shared<GammaTracker>(from_to, F.type, F.fwhm,
 														 MAX_ITER, F.MAX_TRACK, F.nthr - 1,
 														 F.Tracking, &MC, F.MC_Calc,
-														 F.order, F.Force, false));
+														 F.order, F.Force, false,
+														 F.OFT_Track));
 
 	Scraper.push_back(std::make_shared<GammaScraper>(from_to, F.type, F.nthr - 1, F.NoG));
 
@@ -311,6 +318,10 @@ void PrintCouts(FlagsAndVals &F)
 		std::cout << "Analyzing 137 Cs run of e673 at GANIL" << std::endl;
 	if(F.OFT)
 		std::cout << "Format handled data into OFT Format" << std::endl;
+	
+	if(F.OFT_Track)
+		std::cout << "Tracking of OFT output files" << std::endl;
+
 	if(F.debug)
 	{
 		std::cout << "- - - - - - - - - - - - - - - - - - - - - - - - - - -" << std::endl;
@@ -372,6 +383,7 @@ void PrintHelp(){
 	std::cout << "\t -G \t analyze 137 Cs run of e673 experiment at GANIL (May/June 2017)" << std::endl;
 	std::cout << "\t -db \t enable debugging mode -> no histograms are loaded" << std::endl;
 	std::cout << "\t -OFT\t generate OFT-formatted data" << std::endl;
+	std::cout << "\t -OFT_T\t enable tracking of OFT output" << std::endl;
 	std::cout << "\t -h \t prints this message" << std::endl; 
 	std::cout << "-------------------------------------------------------------------" << std::endl;
 	std::cout << std::endl;
@@ -526,6 +538,11 @@ void FlagChecker(int argc,char** argv,FlagsAndVals &F)
 		if (std::string(argv[i]) == "-OFT")
 		{
 			F.OFT = true;
+			continue;
+		}
+		if (std::string(argv[i]) == "-OFT_T")
+		{
+			F.OFT_Track = true;
 			continue;
 		}
 	}

@@ -20,11 +20,13 @@ GammaTracker::GammaTracker(std::vector<int> &range,
 						   bool _MC_Calc,
 						   int _order,
 						   bool _ForceMode,
-						   bool _GANIL) 
+						   bool _GANIL,
+						   bool _OFT) 
 	: generator((unsigned int) thr_num) , 
 	  MC_Calc(_MC_Calc) ,
 	  ForceMode(_ForceMode),
-	  GANIL(_GANIL)
+	  GANIL(_GANIL),
+	  OFT(_OFT)
 {
 	
 	if(_order > 2 || _order <= 0) order = 1;
@@ -109,7 +111,12 @@ void GammaTracker::LOAD()
 {
 
 	std::string tmpDouble = (type) ? "Double" : "";
-	std::string name = "Stored/Gamma"+tmpDouble+"_" + std::to_string(range[0]) + "_" + std::to_string(range[1]) + ".rawSpec";
+
+	std::string name = "Stored/";
+
+	name += OFT ? "OFT/" : "";
+	name += "Gamma"+tmpDouble+"_" + std::to_string(range[0]) + "_" + std::to_string(range[1]) + ".rawSpec";
+	
 	std::ifstream data(name);
 	if(data.fail()){
 		std::cerr << "Could not find " << name << std::endl;
@@ -138,9 +145,13 @@ void GammaTracker::LOAD()
 		}
 		else{
 			if(iter > 1 && iter <= MAX_ITER){
-				if(std::abs(Efull - 661.7) <= 2){
-					successful = Tracking(iter,0);
-					if(successful == Track) WRITE(iter);
+				if(std::abs(Efull - 661.7) <= 2)
+				{
+					bool BAD = CheckGammaBadness(iter);
+					if(!BAD)
+					{	successful = Tracking(iter,0);
+						if(successful == Track) WRITE(iter);
+					}
 				}
 			}
 			iter = 0;
@@ -450,8 +461,8 @@ bool GammaTracker::Tracking(int iter,int pos_d)
 					//Get intersected area
 					if (std::abs(Estart - 661.7) <= 2)
 						PValue = MC->GetIntersection_661(binsArray, thetaX, EtmpVec);	
-					else if(Estart < 275 && BinCheck(EtmpVec))
-						PValue = MC->GetIntersection(binsArray, thetaX, EtmpVec);
+					//else if(Estart < 275 && BinCheck(EtmpVec))
+					//	PValue = MC->GetIntersection(binsArray, thetaX, EtmpVec);
 					else
 						PValue = MC->GetPValue(binsArray, thetaX);
 				}	
@@ -568,11 +579,13 @@ void GammaTracker::get_E_angle(double Estart,double Ed,int pos)
 
 	if (cth < -1 && std::abs(Estart - 661.7) > 2)
 	{
-		if(Estart >= 275 || (Estart < 275 && !BinCheck(EtmpVec)))
-		{
-			angle_vec[pos][1] = WRONG_CASE;
-			return;
-		}
+		//if(Estart >= 275 || (Estart < 275 && !BinCheck(EtmpVec)))
+		//{
+		//	angle_vec[pos][1] = WRONG_CASE;
+		//	return;
+		//}
+		angle_vec[pos][1] = WRONG_CASE;
+		return;
 	}
 
 
@@ -597,9 +610,11 @@ void GammaTracker::get_sigmas(int pos,int perm_iter)
 	double x_s[2][3];
 	for(int i = 1;i < 3;++i) for(int j = 0;j < 3;++j) x_s[i-1][j] = mu_vec[i][j];
 
-	//1st error
+	//norm of vector x0 - source
 	double norm1 = 0;
+	//norm of vector x1 - x0
 	double norm2 = 0;
+
 	double scalar = 0;
 	double c_th = 0,delta_cos_th= 0;
 	double Da_1 = 0,Da_2 = 0,Db_1 = 0,Db_2 = 0,Da_0 = 0,Db_0 = 0;
@@ -627,6 +642,11 @@ void GammaTracker::get_sigmas(int pos,int perm_iter)
 	if(binsArray[3] == 180) --binsArray[3];
 
 	thetaX = c_th;
+
+	if(binsArray[3] > 180 || binsArray[3] < 0)
+	{
+		std::cout << "Upsi" << std::endl;
+	}
 
 	//skip error propagation if MC method used
 	if(MC_Calc) return;
@@ -734,10 +754,30 @@ void GammaTracker::GetSigmaE(std::vector<double> &Edeps,int len)
 
 inline bool GammaTracker::BinCheck(std::vector<double> &Tmp)
 {
+
+	return false;
+
 	int a = (int) Tmp[0]/25;
 	int b = (int) Tmp[1]/25;
 
 	return (a - b) > 0;
+}
+
+//--------------------------------------------------------------
+
+inline bool GammaTracker::CheckGammaBadness(int iter)
+{
+	double norm = 0;
+	for(int i = 0;i < iter-1;++i)
+	{
+		norm = 0;
+		for(int j = 1;j < 4;++j)
+			norm += std::abs(GammaBuffer[i][j] - GammaBuffer[i+1][j]);
+		
+		if(!norm)
+			return true;
+	}
+	return false;
 }
 
 //--------------------------------------------------------------

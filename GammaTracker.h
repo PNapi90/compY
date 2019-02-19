@@ -35,7 +35,7 @@ private:
 
 	MC_Sampler* MC;
 
-	bool MC_Calc,ForceMode,GANIL;
+	bool MC_Calc,ForceMode,GANIL,OFT;
 	int binningFactor,order;
 
 	double sigma,lambdaE;
@@ -84,6 +84,7 @@ private:
 	inline double Gaussian(double);
 	inline double Exponential(double);
 	inline bool BinCheck(std::vector<double> &Tmp);
+	inline bool CheckGammaBadness(int iter);
 
 
 
@@ -99,7 +100,8 @@ public:
 			   bool _MC_Calc,
 			   int _order,
 			   bool _ForceMode,
-			   bool _GANIL);
+			   bool _GANIL,
+			   bool _OFT);
   ~GammaTracker();
 
   std::thread threading();
