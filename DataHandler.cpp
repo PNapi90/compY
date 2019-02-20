@@ -64,7 +64,10 @@ DataHandler::DataHandler(std::vector<int> &range,
 		tmpName = "Stored/Gamma"+tmpDouble + "_" + std::to_string(range[0]) + "_" + std::to_string(range[1]) + ".rawSpec";
 	else
 	{
-		tmpName = "Stored/OFT/GammaEvents_OFT." + std::to_string(range[0]) + "_" + std::to_string(range[1]);
+		tmpName = "Stored/OFT/GammaEvents_OFT";
+		if(type)
+			tmpName += "_Double";
+		tmpName += "." + std::to_string(range[0]) + "_" + std::to_string(range[1]);
 	}
 	
 
@@ -112,11 +115,23 @@ void DataHandler::LOAD(){
 	bool first_gamma = true;
 	bool skip = false;
 	int iterator = 0;
+	int tmpID = 0;
 
 	int lineIter = 0;
 	for (int i = range[0]; i < range[1]; ++i) 
 	{
-		name = "Gamma_Single_Cs/GammaEvents." + EndingName(i);
+		if(!OFT)
+			name = "Gamma_Single_Cs/GammaEvents." + EndingName(i);
+
+		else
+		{
+			if(!type)
+				name = "Gamma_Single_Cs/GammaEvents." + EndingName(i);
+			else
+				name = "Gamma_Double_Cs/GammaEvents." + EndingName(i);
+		}
+				
+		
 		file.open(name);
 		if(file.fail()){
 			std::cerr << "Could not find " << name << std::endl;
@@ -148,6 +163,9 @@ void DataHandler::LOAD(){
 			{
 				E0 = E;
 				oldLine = line;
+				
+				if(this->type)
+					tmpID = dummy;
 
 				new_gamma = true;
 			}
@@ -163,7 +181,7 @@ void DataHandler::LOAD(){
 				for(int i = 0;i < 3;++i) Gamma[gamma_iter][i+1] = x[i];
 
 				Signs[gamma_iter][0] = type;
-				Signs[gamma_iter][1] = dummy;
+				Signs[gamma_iter][1] = this->type ? tmpID : dummy;
 
 				++gamma_iter;
 				new_gamma = false;
@@ -228,7 +246,8 @@ void DataHandler::LOAD_Double()
 
 		data_coming = false;
 
-		while(std::getline(file,line,'\n')){
+		while(std::getline(file,line,'\n'))
+		{
 			if(line[0] == '#') continue;
 
 			if(line[0] == '$'){
@@ -628,7 +647,7 @@ void DataHandler::SetFileEnding(){
 //-------------------------------------------------------------------------------------------
 
 std::thread DataHandler::threading(){
-	if(!type) return std::thread(
+	if(!type || OFT) return std::thread(
 		[=]
 		{	
 			if(!GANIL)

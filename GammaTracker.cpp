@@ -108,15 +108,25 @@ GammaTracker::~GammaTracker()
 //--------------------------------------------------------------
 
 void GammaTracker::LOAD()
-{
+{	
+
+	
 
 	std::string tmpDouble = (type) ? "Double" : "";
+	tmpDouble = "Double";
 
 	std::string name = "Stored/";
 
-	name += OFT ? "OFT/" : "";
-	name += "Gamma"+tmpDouble+"_" + std::to_string(range[0]) + "_" + std::to_string(range[1]) + ".rawSpec";
-	
+	if(type)
+	{
+		name += "OFT/Gamma_Double_" + std::to_string(range[0]) + "_" + std::to_string(range[1]) + ".rawSpec";
+	}
+	else
+	{
+		name += OFT ? "OFT/" : "";
+		name += "Gamma_" + tmpDouble + "_" + std::to_string(range[0]) + "_" + std::to_string(range[1]) + ".rawSpec";
+	}
+
 	std::ifstream data(name);
 	if(data.fail()){
 		std::cerr << "Could not find " << name << std::endl;
@@ -171,12 +181,22 @@ void GammaTracker::LOAD()
 
 void GammaTracker::LOAD_Double()
 {
-	std::string name = "Stored/GammaDouble_" + std::to_string(range[0]) + "_" + std::to_string(range[1]);
+	std::string name = "Stored/";
+	if(!OFT)
+		name += "GammaDouble_" + std::to_string(range[0]) + "_" + std::to_string(range[1]) + ".rawSpec";
+	else
+	{
+		name += "OFT/Gamma_Double_" + std::to_string(range[0]) + "_" + std::to_string(range[1]) + ".rawSpec";
+	}
+	
 	std::ifstream data(name);
-	if(data.fail()){
+	
+	if(data.fail())
+	{
 		std::cerr << "Could not find " << name << std::endl;
 		exit(1);
 	}
+	
 	std::string line;
 	double x[5] = {0};
 	int N = 0;
@@ -186,34 +206,47 @@ void GammaTracker::LOAD_Double()
 	int gamma_counter = 0;
 
 	int count_doubles = 0;
-	for(int i = 0;i < 2;++i) len_D[i] = 0;
+	
+	for(int i = 0;i < 2;++i) 
+		len_D[i] = 0;
 
-	while(std::getline(data,line,'\n')){
+	while(std::getline(data,line))
+	{
 		std::sscanf(line.c_str(),formatDouble,&x[0],&x[1],&x[2],&x[3],&x[4],&N);
-		if(x[0] > 0){
-			for(int j = 0;j < 4;++j) GammaBufferDouble[count_doubles][iter][j] = x[j];
+		if(x[0] > 0)
+		{
+			for(int j = 0;j < 4;++j)
+				GammaBufferDouble[count_doubles][iter][j] = x[j];
 			Egamma_D[count_doubles] = x[4];
 			NOriginal_D[count_doubles] = N;
+			
 			++iter;
 		}
-		else{
+		else
+		{
 			len_D[count_doubles] = iter;
 			iter = 0;
 			++count_doubles;
 			successful = true;
-			if(count_doubles == 2){
-				for(int i = 0;i < 2;++i){
-					if(len_D[i] >= 1 && len_D[i] <= MAX_ITER){
+			if(count_doubles == 2)
+			{
+				for(int i = 0;i < 2;++i)
+				{
+					if(len_D[i] >= 1 && len_D[i] <= MAX_ITER)
+					{
 						SetBuffer(i);
 						successful = successful && Tracking(len_D[i],i);
 					}
 				}
-				if(successful) WRITE(iter);
+				if(successful)
+					WRITE(iter);
+				
 				iter = 0;
 				++gamma_counter;
 
 				count_doubles = 0;
-				for(int i = 0;i < 2;++i) len_D[i] = 0;
+				for(int i = 0;i < 2;++i)
+					len_D[i] = 0;
 			}
 		}
 	}
@@ -295,7 +328,7 @@ void GammaTracker::LOAD_GANIL()
 
 std::thread GammaTracker::threading()
 {
-	if(!type) return std::thread(
+	if(!type || OFT) return std::thread(
 		[=]{
 			if(!GANIL)
 				LOAD();
@@ -320,7 +353,7 @@ void GammaTracker::SetBuffer(int pos)
 void GammaTracker::WRITE(int iter)
 {
 
-	if(type){
+	if(type && !OFT){
 		double edep_t = 0;
 		for(int o = 0;o < 2;++o){
 			edep_t = 0;
@@ -387,6 +420,9 @@ bool GammaTracker::Tracking(int iter,int pos_d)
 	if(!GANIL) Estart = type ? Egamma_D[pos_d] : Egamma;
 	else Estart = 661.7;
 
+	if(OFT)
+		Estart = 661.7;
+
 	double delta_tmp = 0;
 
 	std::sort(sortarray.begin(),sortarray.end());
@@ -406,8 +442,8 @@ bool GammaTracker::Tracking(int iter,int pos_d)
 	{
 		if(!GANIL)
 			Estart = type ? Egamma_D[pos_d] : Egamma;
-		else 
-			Estart = 661.7;
+		//else 
+		Estart = 661.7;
 		
 		delta_tmp = 0;
 		delta_arr[perm_iter] = 0;
@@ -427,7 +463,8 @@ bool GammaTracker::Tracking(int iter,int pos_d)
 			//for first point, set source position as start
 			start_val = (i == 0) ? 1 : 0;
 			
-			if(i == 0){
+			if(i == 0)
+			{
 				for(int k = 0;k < 3;++k)
 					mu_vec[0][k] = source_vec[k];
 			}
@@ -457,6 +494,8 @@ bool GammaTracker::Tracking(int iter,int pos_d)
 
 					EtmpVec[0] = Estart;
 					EtmpVec[1] = GammaBuffer[sortarray[i]][0];
+
+
 						
 					//Get intersected area
 					if (std::abs(Estart - 661.7) <= 2)

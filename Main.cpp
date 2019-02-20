@@ -125,7 +125,7 @@ int main(int argc, char **argv)
 
 	getSets(sets, F.nthr, F.amount_of_sets);
 
-	int MAX_ITER = 6;
+	int MAX_ITER = 2;
 	
 
 	int set_begin = 0;
@@ -291,8 +291,11 @@ void PrintCouts(FlagsAndVals &F)
 	std::cout << "Running program with " << F.nthr << " " << t_name << std::endl;
 	std::cout << "FWHM set to: " << F.fwhm << " mm" << std::endl;
 	std::cout << "File Offset: " << F.offset << std::endl;
-	std::cout << "Acceptance Level: " << F.MAX_TRACK << "\u03C3" << std::endl;
-	std::cout << "Interested in " << tr_tmp << " gammas" << std::endl;
+	if(!F.OFT)
+	{
+		std::cout << "Acceptance Level: " << F.MAX_TRACK << "\u03C3" << std::endl;
+		std::cout << "Interested in " << tr_tmp << " gammas" << std::endl;
+	}
 	if (F.SkipHandler)
 		std::cout << "Skipping DataHandlers" << std::endl;
 	if (F.SkipTracker)
@@ -307,7 +310,7 @@ void PrintCouts(FlagsAndVals &F)
 		std::cout << "Suppression of Multi-hit Convolution set to " << F.CRange << std::endl;
 	if (!F.Smear)
 		std::cout << "No Gaussian smearing of data" << std::endl;
-	if (F.Force)
+	if (F.Force && !F.OFT)
 	{
 		if (F.MC_Calc)
 			std::cout << "Using Monte Carlo based error propagation" << std::endl;
