@@ -125,13 +125,13 @@ void DataHandler::LOAD(){
 
 		else
 		{
-			if(!type)
+			if(!this->type)
 				name = "Gamma_Single_Cs/GammaEvents." + EndingName(i);
 			else
 				name = "Gamma_Double_Cs/GammaEvents." + EndingName(i);
 		}
 				
-		
+		int kkk = 0;
 		file.open(name);
 		if(file.fail()){
 			std::cerr << "Could not find " << name << std::endl;

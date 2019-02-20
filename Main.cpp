@@ -153,6 +153,9 @@ int main(int argc, char **argv)
 
 	MC_Sampler MC(Bins,F.debug);
 
+	const bool OFT = F.OFT;
+	const bool type = F.type;
+
 	for (int i = 0; i < F.nthr - 1; ++i)
 	{
 		set_begin = from_to[1];
@@ -167,13 +170,13 @@ int main(int argc, char **argv)
 		}
 		
 		if (!F.SkipHandler)
-			Handlers.push_back(std::make_shared<DataHandler>(from_to, F.type, F.fwhm,
+			Handlers.push_back(std::make_shared<DataHandler>(from_to, type, F.fwhm,
 															 i, F.maxG, ((unsigned int)i),
 															 F.NoG, F.CRange, ((int)F.Smear * 1), 
-															 F.GANIL,F.OFT));
+															 F.GANIL,OFT));
 
 		if (!F.SkipTracker)
-			Tracker.push_back(std::make_shared<GammaTracker>(from_to, F.type, F.fwhm,
+			Tracker.push_back(std::make_shared<GammaTracker>(from_to, type, F.fwhm,
 															 MAX_ITER, F.MAX_TRACK, i,
 															 F.Tracking, &MC, F.MC_Calc,
 															 F.order, F.Force, false, 
@@ -188,7 +191,7 @@ int main(int argc, char **argv)
 	if (!F.SkipHandler)
 		Handlers.push_back(std::make_shared<DataHandler>(from_to, F.type, F.fwhm,
 														 F.nthr - 1, F.maxG, (unsigned int)F.nthr - 1,
-														 F.NoG, F.CRange, ((int)F.Smear * 1), F.GANIL, F.OFT));
+														 F.NoG, F.CRange, ((int)F.Smear * 1), F.GANIL, OFT));
 	if (!F.SkipTracker)
 		Tracker.push_back(std::make_shared<GammaTracker>(from_to, F.type, F.fwhm,
 														 MAX_ITER, F.MAX_TRACK, F.nthr - 1,
@@ -316,7 +319,7 @@ void PrintCouts(FlagsAndVals &F)
 			std::cout << "Using Monte Carlo based error propagation" << std::endl;
 		else std::cout << "Using Gaussian error propagation of " << order_string << std::endl;
 	}
-	else std::cout << "Mixing of Monte Carlo and Gaussian error propagation" << std::endl;
+	//else std::cout << "Mixing of Monte Carlo and Gaussian error propagation" << std::endl;
 	if (F.GANIL)
 		std::cout << "Analyzing 137 Cs run of e673 at GANIL" << std::endl;
 	if(F.OFT)
@@ -397,9 +400,9 @@ void PrintHelp(){
 void FlagChecker(int argc,char** argv,FlagsAndVals &F)
 {	
 	bool OrderFlag = false;
-
+	std::cout << "Flags > ";
 	for(int i = 0;i < argc;++i){
-		
+		std::cout << std::string(argv[i]) << " ";
 		if(std::string(argv[i]) == "-h"){
 			PrintHelp();
 			F.helpCalled = true;
