@@ -15,7 +15,8 @@ DataHandler::DataHandler(std::vector<int> &range,
 						 bool GANIL,
 						 bool _OFT) 
 	: generator(SEED) ,
-	  OFT(_OFT)
+	  OFT(_OFT),
+	  PhotonID(-1)
 {
 	this->GANIL = GANIL;
 	this->SMEAR = SMEAR;
@@ -40,12 +41,14 @@ DataHandler::DataHandler(std::vector<int> &range,
 	gammaID = 0;
 	
 	tmpIter = 0;
-	TmpGamma = std::vector<std::vector<std::vector<double> > >(1000,std::vector<std::vector<double> >(100,std::vector<double>(7,0)));
+	TmpGamma = std::vector<std::vector<std::vector<double> > >(1000,std::vector<std::vector<double> >(100,std::vector<double>(8,0)));
 	TmpGammaLen = std::vector<int>(1000,0);
 
 	gamma_iter2 = std::vector<int>(2,0);
 	E0_2 = std::vector<double>(2,0);
 	Gamma2 = std::vector<std::vector<std::vector<double> > >(2,std::vector<std::vector<double> >(max_len,std::vector<double>(4,0)));
+
+	DetIDs = std::vector<int>(100,0);
 
 	Signs = std::vector<std::vector<int> >(1000,std::vector<int>(2,0));
 
@@ -161,9 +164,14 @@ void DataHandler::LOAD(){
 			
 			if(type == -1)
 			{
+				
+				if(gamma_iter > 0)
+					ResetGammaBuffer();
+
+				PhotonID = dummy;
+
 				E0 = E;
 				oldLine = line;
-				
 				if(this->type)
 					tmpID = dummy;
 
@@ -171,14 +179,13 @@ void DataHandler::LOAD(){
 			}
 			else
 			{	
-				if(new_gamma)
-					ResetGammaBuffer();
-
 				if(gamma_iter == 0)
 					GammaLine = oldLine;
 				
 				Gamma[gamma_iter][0] = E;
 				for(int i = 0;i < 3;++i) Gamma[gamma_iter][i+1] = x[i];
+
+				DetIDs[gamma_iter] = type;
 
 				Signs[gamma_iter][0] = type;
 				Signs[gamma_iter][1] = this->type ? tmpID : dummy;
@@ -336,8 +343,8 @@ void DataHandler::LOAD_GANIL()
 
 	for (int i = 0; i < 1; ++i)
 	{
-		name = "Gamma_GANIL/DATA_REAL/FOR_MC";
-		//name = "Gamma_GANIL/GammaEvents.GANIL";
+		//name = "Gamma_GANIL/DATA_REAL/FOR_MC";
+		name = "Gamma_GANIL/GammaEvents.GANIL";
 		file.open(name);
 		if (file.fail())
 		{
@@ -347,7 +354,7 @@ void DataHandler::LOAD_GANIL()
 
 		data_coming = false;
 
-		while (std::getline(file, line, '\n') && am_GammasFull < maxG)
+		while (std::getline(file, line) && am_GammasFull < maxG)
 		{
 			if (line[0] == '#')
 				continue;
@@ -366,7 +373,7 @@ void DataHandler::LOAD_GANIL()
 			if (type == -1)
 			{
 				process = (std::abs(E - 661.7) > 2);
-				
+				PhotonID = dummy;
 				process = true;
 				E0 = 661.7;
 				new_gamma = true;
@@ -521,7 +528,7 @@ void DataHandler::MergeGammaAndSave(){
 		}
 	}
 	
-	for(int i = 0;i <= m_iter;++i) MergedData[i][4] = gammaID;
+	for(int i = 0;i <= m_iter;++i) MergedData[i][4] = PhotonID;//gammaID;
 
 	SaveMerge();
 }
@@ -571,6 +578,7 @@ void DataHandler::SaveMerge()
 			TmpGamma[tmpIter][i][4] = E0;
 			TmpGamma[tmpIter][i][5] = gamma_iter;
 			TmpGamma[tmpIter][i][6] = MergedData[i][4];
+			TmpGamma[tmpIter][i][7] = DetIDs[i];
 		}
 		TmpGammaLen[tmpIter] = m_iter+1;
 		++tmpIter;

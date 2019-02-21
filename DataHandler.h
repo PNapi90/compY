@@ -33,13 +33,15 @@ private:
 	bool type,NoG,GANIL;
 	int gamma_iter,m_iter,double_gam_counter,thr_num,tmpIter;
 
+	int PhotonID;
+
 	int maxG,am_GammasFull,SMEAR;
 
 	bool OFT;
 
 	double E0;
 
-	std::vector<int> range,gamma_iter2,TmpGammaLen;
+	std::vector<int> range,gamma_iter2,TmpGammaLen,DetIDs;
 	std::vector<double> E0_2;
 	std::vector<std::vector<double>> Gamma, MergedData;
 	std::vector<std::vector<int>> Signs;

@@ -21,12 +21,15 @@ GammaTracker::GammaTracker(std::vector<int> &range,
 						   int _order,
 						   bool _ForceMode,
 						   bool _GANIL,
-						   bool _OFT) 
+						   bool _OFT,
+						   bool _DirectOutput) 
 	: generator((unsigned int) thr_num) , 
 	  MC_Calc(_MC_Calc) ,
 	  ForceMode(_ForceMode),
 	  GANIL(_GANIL),
-	  OFT(_OFT)
+	  OFT(_OFT),
+	  DirectOutput(_DirectOutput),
+	  HeaderWritten(false)
 {
 	
 	if(_order > 2 || _order <= 0) order = 1;
@@ -37,7 +40,9 @@ GammaTracker::GammaTracker(std::vector<int> &range,
 	this->thr_num = thr_num;
 	this->type = type;
 	this->range = std::vector<int>(2,0);
-	for(int i = 0;i < 2;++i) this->range[i] = range[i];
+	
+	for(int i = 0;i < 2;++i)
+		this->range[i] = range[i];
 
 	binningFactor = (600/this->MC->GetBinning());
 
@@ -54,6 +59,17 @@ GammaTracker::GammaTracker(std::vector<int> &range,
 	std::string tmp = this->type ? "Double" : "";
 	std::string tmpName = "Stored/Bad_Gammas/GammaFalse"+tmp+"_" + std::to_string(range[0]) + "_" + std::to_string(range[1]);
 	OUTFILE.open(tmpName);
+
+	if(DirectOutput)
+	{
+		std::string name = "Stored/DIRECT/GammaOFT"+tmp+"_TRACK." + std::to_string(range[0]) + "_" + std::to_string(range[1]);
+		DIRECT.open(name);
+		if(DIRECT.fail())
+		{
+			std::cerr << "Could not open " << name << std::endl;
+			exit(1);
+		}
+	}
 
 	lambdaE = 0.30529367125613543;
 	UNI = std::uniform_real_distribution<double>(0,lambdaE);
@@ -102,6 +118,8 @@ GammaTracker::~GammaTracker()
 {
 	OUTFILE.close();
 	dep_file.close();
+	if(DirectOutput)
+		DIRECT.close();
 	MC = nullptr;
 }
 
@@ -113,7 +131,7 @@ void GammaTracker::LOAD()
 	
 
 	std::string tmpDouble = (type) ? "Double" : "";
-	tmpDouble = "Double";
+	//tmpDouble = "Double_";
 
 	std::string name = "Stored/";
 
@@ -124,7 +142,7 @@ void GammaTracker::LOAD()
 	else
 	{
 		name += OFT ? "OFT/" : "";
-		name += "Gamma_" + tmpDouble + "_" + std::to_string(range[0]) + "_" + std::to_string(range[1]) + ".rawSpec";
+		name += "Gamma_" + tmpDouble  + std::to_string(range[0]) + "_" + std::to_string(range[1]) + ".rawSpec";
 	}
 
 	std::ifstream data(name);
@@ -158,9 +176,12 @@ void GammaTracker::LOAD()
 				if(std::abs(Efull - 661.7) <= 2)
 				{
 					bool BAD = CheckGammaBadness(iter);
+					
 					if(!BAD)
-					{	successful = Tracking(iter,0);
-						if(successful == Track) WRITE(iter);
+					{	
+						successful = Tracking(iter,0);
+						if(successful == Track) 
+							WRITE(iter);
 					}
 				}
 			}
@@ -352,6 +373,8 @@ void GammaTracker::SetBuffer(int pos)
 
 void GammaTracker::WRITE(int iter)
 {
+	if(DirectOutput)
+		WRITE_DIRECT(iter);
 
 	if(type && !OFT){
 		double edep_t = 0;
@@ -381,6 +404,76 @@ void GammaTracker::WRITE(int iter)
 	}
 	for(int i = 0;i < 11;++i) OUTFILE << -99999 << " ";
 	OUTFILE << std::endl;
+}
+
+//--------------------------------------------------------------
+
+void GammaTracker::WRITE_DIRECT(int iter)
+{
+	
+	if(!HeaderWritten)
+	{
+		std::string name = type ? "Gamma_Double_Cs/" : "Gamma_Single_Cs/";
+	
+		name += "GammaEvents." + GetEnding(range[0]);
+
+		std::ifstream TMP_INPUT(name);
+
+		if(TMP_INPUT.fail())
+		{
+			std::cerr << "Could not open " <<  name << std::endl;
+			exit(1);
+		}
+
+		std::string line;
+
+
+		//write file header
+		while(std::getline(TMP_INPUT,line))
+		{
+			DIRECT << line << std::endl;
+			if(line[0] == '$')
+			{
+				HeaderWritten = true;
+				break;
+			}
+		}
+	}
+
+	//write incident information
+	DIRECT << "   " <<-1 << "   " << 661.7 << " " << 0 << " " << 0 << " " << 0 << " " << ID << std::endl;
+	
+	for (int i = 0; i < iter; ++i)
+	{
+		DIRECT <<"   " <<13 << "   ";
+		for(int j = 0;j < 4;++j)
+			DIRECT << GammaBuffer[i][j] << " ";
+		DIRECT << 1 << std::endl;
+	}	
+}
+
+//--------------------------------------------------------------
+
+inline std::string GammaTracker::GetEnding(int i)
+{
+
+	int n_Zeros = 0;
+
+	std::string tmp = "";
+
+	if(i > 999)
+		n_Zeros = 0;
+	else if(i > 99)
+		n_Zeros = 1;
+	else if(i > 9)
+		n_Zeros = 2;
+	else
+		n_Zeros = 3;
+
+	for(int j = 0;j < n_Zeros;++j)
+		tmp += "0";
+
+	return tmp + std::to_string(i);
 }
 
 //--------------------------------------------------------------

@@ -42,7 +42,7 @@ void Merger::LOAD()
 	std::vector<int> d(2,0);
 	am_lines = 0;
 
-	std::ofstream out("OutputFolder/Output_FWHM_"+std::to_string(FWHM)+"_"+tmpName+std::to_string(from)+"_" + std::to_string(to));
+	std::ofstream out("OutputFolder/Output_FWHM_"+std::to_string((int)FWHM)+"_"+tmpName+std::to_string(from)+"_" + std::to_string(to));
 
 	for(int i = 0;i < am_thr;++i){
 		name = "Stored/Bad_Gammas/GammaFalse"+tmpName+"_dists_"+std::to_string(i+fileOffset)+"_"+std::to_string(i+1+fileOffset);

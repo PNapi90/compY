@@ -10,6 +10,7 @@ rc('text', usetex=True)
 
 
 dataN = np.loadtxt("OutputFolder/Out_newAppr_All2")#ONon")
+#data = np.loadtxt("OutputFolder/Output_FWHM_5.000000_0_1")
 data = np.loadtxt("OutputFolder/Out_newAppr_after2")#Output_FWHM_5.000000_0_1_2inter")
 data2 = np.loadtxt("Gamma_GANIL/OFT_2Ints.dat")
 data3 = np.loadtxt("Gamma_GANIL/All_2Ints.dat")
@@ -33,7 +34,7 @@ bar1 = len(dataN)/len(data3)*100
 yl = [i*25 for i in range(5)]
 ylS = ["$"+str(y)+"$" for y in yl]
 
-names = ["MCT", "OFT", "OFT+MCT"]
+names = ["MC", "OFT", "OFT+MC"]
 values = [x1+widthB/2,x2+widthB/2,x3+widthB/2]
 
 
@@ -73,7 +74,7 @@ plt.text(x = values[1] , y = 100-bar2-delta, s = "$79\\,\\%$", size = 12,ha='cen
 plt.text(x = values[2] , y = 100-bar3-delta, s = "$96\\,\\%$", size = 12,ha='center', va='center',color="w",rotation=90*0)
 #plt.axhline(100,color="k",ls="--",lw=1.2)
 
-plt.xticks(values,names,fontsize=8)
+plt.xticks(values,names,fontsize=10)
 plt.yticks(yl,ylS)
 plt.ylim([40,105])
 

@@ -35,7 +35,7 @@ private:
 
 	MC_Sampler* MC;
 
-	bool MC_Calc,ForceMode,GANIL,OFT;
+	bool MC_Calc,ForceMode,GANIL,OFT,DirectOutput,HeaderWritten;
 	int binningFactor,order;
 
 	double sigma,lambdaE;
@@ -55,7 +55,7 @@ private:
 	std::uniform_real_distribution<double> UNI;
 
 
-	std::ofstream OUTFILE,dep_file;
+	std::ofstream OUTFILE,dep_file,DIRECT;
 
 	int len,len_orig,NOriginal,thr_num,ID;
 	std::vector<int> len_D,len_orig_D,NOriginal_D;
@@ -69,9 +69,10 @@ private:
 	void LOAD_GANIL();
 	void LOAD_Double();
 
-	void SetBuffer(int);
-	void WRITE(int);
-	void PrintDataSet(int);
+	void SetBuffer(int pos);
+	void WRITE(int iter);
+	void WRITE_DIRECT(int iter);
+	void PrintDataSet(int iter);
 	void get_sigmas(int,int);
 	void get_E_angle(double,double,int);
 	void GetSigmaE(std::vector<double>&,int);
@@ -85,6 +86,7 @@ private:
 	inline double Exponential(double);
 	inline bool BinCheck(std::vector<double> &Tmp);
 	inline bool CheckGammaBadness(int iter);
+	inline std::string GetEnding(int i);
 
 
 
@@ -101,7 +103,8 @@ public:
 			   int _order,
 			   bool _ForceMode,
 			   bool _GANIL,
-			   bool _OFT);
+			   bool _OFT,
+			   bool _DirectOutput);
   ~GammaTracker();
 
   std::thread threading();

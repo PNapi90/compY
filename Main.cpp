@@ -55,6 +55,7 @@ struct FlagsAndVals
 	bool debug = false;
 	bool OFT = false;
 	bool OFT_Track = false;
+	bool DirectOutput = false;
 };
 
 
@@ -179,8 +180,8 @@ int main(int argc, char **argv)
 			Tracker.push_back(std::make_shared<GammaTracker>(from_to, type, F.fwhm,
 															 MAX_ITER, F.MAX_TRACK, i,
 															 F.Tracking, &MC, F.MC_Calc,
-															 F.order, F.Force, false, 
-															 F.OFT_Track));
+															 F.order, F.Force, false,
+															 F.OFT_Track, F.DirectOutput));
 
 		Scraper.push_back(std::make_shared<GammaScraper>(from_to, F.type, i, F.NoG));
 	}
@@ -197,7 +198,7 @@ int main(int argc, char **argv)
 														 MAX_ITER, F.MAX_TRACK, F.nthr - 1,
 														 F.Tracking, &MC, F.MC_Calc,
 														 F.order, F.Force, false,
-														 F.OFT_Track));
+														 F.OFT_Track,F.DirectOutput));
 
 	Scraper.push_back(std::make_shared<GammaScraper>(from_to, F.type, F.nthr - 1, F.NoG));
 
@@ -215,8 +216,6 @@ int main(int argc, char **argv)
 	}
 	std::cout << "Handlers: done" << std::endl;
 	std::cout << "-----------------" << std::endl;
-
-	
 
 	if (!F.SkipTracker)
 	{
@@ -328,6 +327,9 @@ void PrintCouts(FlagsAndVals &F)
 	if(F.OFT_Track)
 		std::cout << "Tracking of OFT output files" << std::endl;
 
+	if(F.DirectOutput)
+		std::cout << "Directly writing Tracked data in OFT format" << std::endl;
+
 	if(F.debug)
 	{
 		std::cout << "- - - - - - - - - - - - - - - - - - - - - - - - - - -" << std::endl;
@@ -390,6 +392,7 @@ void PrintHelp(){
 	std::cout << "\t -db \t enable debugging mode -> no histograms are loaded" << std::endl;
 	std::cout << "\t -OFT\t generate OFT-formatted data" << std::endl;
 	std::cout << "\t -OFT_T\t enable tracking of OFT output" << std::endl;
+	std::cout << "\t -D\t write Tracking Output in OFT format" << std::endl;
 	std::cout << "\t -h \t prints this message" << std::endl; 
 	std::cout << "-------------------------------------------------------------------" << std::endl;
 	std::cout << std::endl;
@@ -400,9 +403,7 @@ void PrintHelp(){
 void FlagChecker(int argc,char** argv,FlagsAndVals &F)
 {	
 	bool OrderFlag = false;
-	std::cout << "Flags > ";
 	for(int i = 0;i < argc;++i){
-		std::cout << std::string(argv[i]) << " ";
 		if(std::string(argv[i]) == "-h"){
 			PrintHelp();
 			F.helpCalled = true;
@@ -549,6 +550,11 @@ void FlagChecker(int argc,char** argv,FlagsAndVals &F)
 		if (std::string(argv[i]) == "-OFT_T")
 		{
 			F.OFT_Track = true;
+			continue;
+		}
+		if(std::string(argv[i]) == "-D")
+		{
+			F.DirectOutput = true;
 			continue;
 		}
 	}

@@ -10,8 +10,8 @@ rc('text', usetex=True)
 
 
 
-data = np.loadtxt("OutputFolder/Output_FWHM_5.000000_0_1")
-data2 = np.loadtxt("OutputFolder/Output_FWHM_5.000000_Double0_1")
+data = np.loadtxt("OutputFolder/SingleG2")
+data2 = np.loadtxt("OutputFolder/DoubleG2")
 
 ens = np.zeros(len(data))
 iter = 0
@@ -38,13 +38,16 @@ print(above2,len(data2),above2/len(data2))
 plt.figure(1,figsize=(5,4))
 plt.clf()
 
-plt.hist(data[:,0]-data[:,1],bins=150,range=[0,600],histtype="step",color="royalblue")
-plt.hist(data2[:,0]-data2[:,1],bins=150,range=[0,600],histtype="step",color="r")
+plt.hist(data[:,0]-data[:,1],bins=1200,range=[0,600],histtype="step",color="royalblue")
+plt.hist(data2[:,0]-data2[:,1],bins=1200,range=[0,600],histtype="step",color="r")
 
 plt.figure(2,figsize=(5,4))
 plt.clf()
 
 plt.hist(ens[:iter],bins=700//4,range=[0,700],histtype="step",color="royalblue")
+plt.hist(data2[:,2],bins=700//4,range=[0,700],histtype="step",color="r")
+
+
 
 
 from matplotlib.colors import LogNorm
