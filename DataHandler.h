@@ -37,7 +37,7 @@ private:
 
 	int maxG,am_GammasFull,SMEAR;
 
-	bool OFT;
+	bool OFT,Mimic;
 
 	double E0;
 
@@ -84,7 +84,8 @@ public:
 			    double CRange,
 			    int SMEAR,
 			    bool GANIL,
-				bool _OFT);
+				bool _OFT,
+				bool _Mimic);
     ~DataHandler();
 
     std::thread threading();

@@ -91,8 +91,8 @@ void PsiMerger::LOAD()
     }
     if (true)
     {
-        std::cout << "\t\t\t\r";
-        std::cout << "\rLoaded " << folder << " E(\u03B8)-X(\u03D1) histograms";
+        std::cout << "\t\t\t\t\t\t\t\r";
+        std::cout << "Loaded " << folder << " E(\u03B8)-X(\u03D1) histograms";
         std::cout.flush();
     }
 }

@@ -13,10 +13,12 @@ DataHandler::DataHandler(std::vector<int> &range,
 						 double CRange,
 						 int SMEAR,
 						 bool GANIL,
-						 bool _OFT) 
+						 bool _OFT,
+						 bool _Mimic) 
 	: generator(SEED) ,
 	  OFT(_OFT),
-	  PhotonID(-1)
+	  PhotonID(-1),
+	  Mimic(_Mimic)
 {
 	this->GANIL = GANIL;
 	this->SMEAR = SMEAR;
@@ -133,6 +135,8 @@ void DataHandler::LOAD(){
 			else
 				name = "Gamma_Double_Cs/GammaEvents." + EndingName(i);
 		}
+		if(Mimic)
+			name = "Gamma_Double_Cs/Merged/GammaEvents_D." + EndingName(i);
 				
 		int kkk = 0;
 		file.open(name);

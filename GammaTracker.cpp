@@ -22,14 +22,16 @@ GammaTracker::GammaTracker(std::vector<int> &range,
 						   bool _ForceMode,
 						   bool _GANIL,
 						   bool _OFT,
-						   bool _DirectOutput) 
+						   bool _DirectOutput,
+						   bool _Mimic) 
 	: generator((unsigned int) thr_num) , 
 	  MC_Calc(_MC_Calc) ,
 	  ForceMode(_ForceMode),
 	  GANIL(_GANIL),
 	  OFT(_OFT),
 	  DirectOutput(_DirectOutput),
-	  HeaderWritten(false)
+	  HeaderWritten(false),
+	  Mimic(_Mimic)
 {
 	
 	if(_order > 2 || _order <= 0) order = 1;
@@ -63,6 +65,10 @@ GammaTracker::GammaTracker(std::vector<int> &range,
 	if(DirectOutput)
 	{
 		std::string name = "Stored/DIRECT/GammaOFT"+tmp+"_TRACK." + std::to_string(range[0]) + "_" + std::to_string(range[1]);
+		
+		if(Mimic)
+			name = "Stored/DIRECT/GammaOFT_D_TRACK." + std::to_string(range[0]) + "_" + std::to_string(range[1]);
+
 		DIRECT.open(name);
 		if(DIRECT.fail())
 		{
@@ -414,8 +420,14 @@ void GammaTracker::WRITE_DIRECT(int iter)
 	if(!HeaderWritten)
 	{
 		std::string name = type ? "Gamma_Double_Cs/" : "Gamma_Single_Cs/";
+		
+		if(Mimic)
+			name = "Gamma_Double_Cs/Merged/";
 	
-		name += "GammaEvents." + GetEnding(range[0]);
+		name += "GammaEvents";
+		name += Mimic ? "_D." : ".";
+		
+		name += GetEnding(range[0]);
 
 		std::ifstream TMP_INPUT(name);
 

@@ -35,7 +35,7 @@ private:
 
 	MC_Sampler* MC;
 
-	bool MC_Calc,ForceMode,GANIL,OFT,DirectOutput,HeaderWritten;
+	bool MC_Calc,ForceMode,GANIL,OFT,DirectOutput,HeaderWritten,Mimic;
 	int binningFactor,order;
 
 	double sigma,lambdaE;
@@ -104,7 +104,8 @@ public:
 			   bool _ForceMode,
 			   bool _GANIL,
 			   bool _OFT,
-			   bool _DirectOutput);
+			   bool _DirectOutput,
+			   bool _Mimic);
   ~GammaTracker();
 
   std::thread threading();

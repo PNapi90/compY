@@ -56,6 +56,7 @@ struct FlagsAndVals
 	bool OFT = false;
 	bool OFT_Track = false;
 	bool DirectOutput = false;
+	bool Mimic = false;
 };
 
 
@@ -126,8 +127,10 @@ int main(int argc, char **argv)
 
 	getSets(sets, F.nthr, F.amount_of_sets);
 
+
+	//=========================
 	int MAX_ITER = 2;
-	
+	//=========================
 
 	int set_begin = 0;
 	int set_end = 0;
@@ -174,14 +177,14 @@ int main(int argc, char **argv)
 			Handlers.push_back(std::make_shared<DataHandler>(from_to, type, F.fwhm,
 															 i, F.maxG, ((unsigned int)i),
 															 F.NoG, F.CRange, ((int)F.Smear * 1), 
-															 F.GANIL,OFT));
+															 F.GANIL,OFT,F.Mimic));
 
 		if (!F.SkipTracker)
 			Tracker.push_back(std::make_shared<GammaTracker>(from_to, type, F.fwhm,
 															 MAX_ITER, F.MAX_TRACK, i,
 															 F.Tracking, &MC, F.MC_Calc,
 															 F.order, F.Force, false,
-															 F.OFT_Track, F.DirectOutput));
+															 F.OFT_Track, F.DirectOutput,F.Mimic));
 
 		Scraper.push_back(std::make_shared<GammaScraper>(from_to, F.type, i, F.NoG));
 	}
@@ -192,13 +195,13 @@ int main(int argc, char **argv)
 	if (!F.SkipHandler)
 		Handlers.push_back(std::make_shared<DataHandler>(from_to, F.type, F.fwhm,
 														 F.nthr - 1, F.maxG, (unsigned int)F.nthr - 1,
-														 F.NoG, F.CRange, ((int)F.Smear * 1), F.GANIL, OFT));
+														 F.NoG, F.CRange, ((int)F.Smear * 1), F.GANIL, OFT,F.Mimic));
 	if (!F.SkipTracker)
 		Tracker.push_back(std::make_shared<GammaTracker>(from_to, F.type, F.fwhm,
 														 MAX_ITER, F.MAX_TRACK, F.nthr - 1,
 														 F.Tracking, &MC, F.MC_Calc,
 														 F.order, F.Force, false,
-														 F.OFT_Track,F.DirectOutput));
+														 F.OFT_Track, F.DirectOutput, F.Mimic));
 
 	Scraper.push_back(std::make_shared<GammaScraper>(from_to, F.type, F.nthr - 1, F.NoG));
 
@@ -336,7 +339,10 @@ void PrintCouts(FlagsAndVals &F)
 		std::cout << "!!!RUNNING IN DEBUG MODE => NO SENSIBLE TRACKING!!!" << std::endl;
 	}
 	std::cout << "------------------------------------------------------" << std::endl;
-	std::cout << "Data in " << (F.type ? d_or_s[1] : d_or_s[0]) << " mode" << std::endl;
+	if(!F.Mimic)
+		std::cout << "Data in " << (F.type ? d_or_s[1] : d_or_s[0]) << " mode" << std::endl;
+	else
+		std::cout << "Data in " << d_or_s[1] << " -> " << d_or_s[0] << " mimic mode" << std::endl;
 	std::cout << "======================================================" << std::endl;
 }
 
@@ -373,7 +379,8 @@ void PrintHelp(){
 	std::cout << "Possible flags:\n" << std::endl;
 	std::cout << "\t -f n\t set n as FWHM in mm (standard: 5 mm) " << std::endl;
 	std::cout << "\t -d \t set double gamma decay analysis" << std::endl;
-	std::cout << "\t -s \t set single gamma decay analysis (standard)" << std::endl; 
+	std::cout << "\t -s \t set single gamma decay analysis (standard)" << std::endl;
+	std::cout << "\t -M \t set double -> single mimic analysis" << std::endl;
 	std::cout << "\t -t n \t set n as amount of threads (standard: 1)" << std::endl;
 	std::cout << "\t -x n\t set n as amount of data set per thread" << std::endl; 
 	std::cout << "\t -o n \t set n as file offset (standard: 0)" << std::endl;  
@@ -555,6 +562,11 @@ void FlagChecker(int argc,char** argv,FlagsAndVals &F)
 		if(std::string(argv[i]) == "-D")
 		{
 			F.DirectOutput = true;
+			continue;
+		}
+		if (std::string(argv[i]) == "-M")
+		{
+			F.Mimic = true;
 			continue;
 		}
 	}
