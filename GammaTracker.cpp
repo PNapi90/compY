@@ -441,7 +441,7 @@ void GammaTracker::WRITE_DIRECT(int iter)
 	}
 
 	//write incident information
-	DIRECT << "   " <<-1 << "   " << 661.7 << " " << 0 << " " << 0 << " " << 0 << " " << ID << std::endl;
+	DIRECT << "   " << -1 << "   " << 661.7 << " " << 0 << " " << 0 << " " << 0 << " " << ID << std::endl;
 	
 	for (int i = 0; i < iter; ++i)
 	{

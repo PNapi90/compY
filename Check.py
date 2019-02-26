@@ -9,11 +9,11 @@ from matplotlib import rc
 rc('text', usetex=True)
 
 
-dataN = np.loadtxt("OutputFolder/Out_newAppr_All2")#ONon")
+dataN = np.loadtxt("OutputFolder/All2_NewOFT")#Out_newAppr_All2")#ONon")
 #data = np.loadtxt("OutputFolder/Output_FWHM_5.000000_0_1")
-data = np.loadtxt("OutputFolder/Out_newAppr_after2")#Output_FWHM_5.000000_0_1_2inter")
-data2 = np.loadtxt("Gamma_GANIL/OFT_2Ints.dat")
-data3 = np.loadtxt("Gamma_GANIL/All_2Ints.dat")
+data = np.loadtxt("OutputFolder/AfterOFT2")#Out_newAppr_after2")#Output_FWHM_5.000000_0_1_2inter")
+data2 = np.loadtxt("OutputFolder/OFT2")#OFT_2Ints.dat")
+data3 = np.loadtxt("OutputFolder/All2_File")
 
 print(len(data),len(data2),len(data3),len(dataN))
 print("oft+mc",1-len(data)/len(data3))
@@ -23,6 +23,13 @@ print("oft",1-len(data2)/len(data3))
 x1 = 0.8
 x2 = 1.0
 x3 = 1.2
+
+
+def Ecomp(E,angle):
+    return E*(1-1/(1+E/511*(1-angle)))
+
+EEdge = Ecomp(661.7,-1)
+
 
 widthB = 0.15
 
@@ -40,11 +47,19 @@ values = [x1+widthB/2,x2+widthB/2,x3+widthB/2]
 
 nbins = 350
 
+weights = [1/2 for i in range(len(data3))]
+
 fig = plt.figure(1,figsize=(5,3))
 plt.clf()
+plt.hist(data3,bins=nbins,weights=weights,range=[0,700],histtype="step",color="k",label="OFT")
 plt.hist(data2,bins=nbins,range=[0,700],histtype="step",color="r",label="OFT")
 plt.hist(data[:,2],bins=nbins,range=[0,700],histtype="step",color="royalblue",label="OFT + MC")
-plt.hist(dataN[:,2],bins=nbins,range=[0,700],histtype="step",color="orange",label="OFT + MC")
+plt.hist(dataN[:,2],bins=nbins,range=[0,700],histtype="step",color="orange",label="MC")
+#plt.axvline(EEdge,color="lime",lw=1.,ls="--")
+plt.text(x =  500, y = 19000, s = "x$\\,$2", size = 10,ha='center', va='center',color="k",rotation=90*0)
+
+
+
 #plt.hist(data3,bins=nbins,range=[0,700],histtype="step",color="k",label="OFT")
 
 
@@ -54,7 +69,8 @@ plt.xlabel("$E_{\\mathrm{dep},1}$ (keV)",fontsize=17)
 
 plt.ylabel("Counts per 2 keV",fontsize = 17)
 
-plt.ylim([0,11500])
+plt.ylim([0,24000])
+#plt.ylim([0,11500])
 plt.xlim([0,660])
 
 
@@ -70,11 +86,11 @@ plt.bar(x3,bar3,width=widthB,color="royalblue",align="edge",hatch="/",alpha = 0.
 delta = 10
 
 plt.text(x = values[0] , y = 100-bar1-delta, s = "$80\\,\\%$", size = 12,ha='center', va='center',color="w",rotation=90*0)
-plt.text(x = values[1] , y = 100-bar2-delta, s = "$79\\,\\%$", size = 12,ha='center', va='center',color="w",rotation=90*0)
-plt.text(x = values[2] , y = 100-bar3-delta, s = "$96\\,\\%$", size = 12,ha='center', va='center',color="w",rotation=90*0)
+plt.text(x = values[1] , y = 100-bar2-delta, s = "$76\\,\\%$", size = 12,ha='center', va='center',color="w",rotation=90*0)
+plt.text(x = values[2] , y = 100-bar3-delta, s = "$91\\,\\%$", size = 12,ha='center', va='center',color="w",rotation=90*0)
 #plt.axhline(100,color="k",ls="--",lw=1.2)
 
-plt.xticks(values,names,fontsize=10)
+plt.xticks(values,names,fontsize=9)
 plt.yticks(yl,ylS)
 plt.ylim([40,105])
 
@@ -98,8 +114,6 @@ plt.tick_params(
 
 
 
-
-
 plt.savefig("plotE_abs.pdf",bbox_inches="tight")
 
 
@@ -109,7 +123,7 @@ plt.hist(data3,bins=nbins,range=[0,700],histtype="step",color="k",label="OFT")
 plt.tick_params(axis='both', which='major', labelsize=15)
 plt.tick_params(axis='both', which='minor', labelsize=10) 
 plt.xlabel("$E_{\\mathrm{dep},1}$ (keV)",fontsize=17)
-
+plt.axvline(EEdge,color="r",lw=1.,ls="--")
 plt.ylabel("Counts per 2 keV",fontsize = 17)
 plt.xlim([0,660])
 
