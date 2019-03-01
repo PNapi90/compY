@@ -11,13 +11,14 @@
 class Geometry_Checker{
 private:
 
-    int lens_ARR[5];
+    int lens_ARR[5],GANIL_FILES;
 
-    double** ganil_theta;
-    double*** ganil_phi;
+    std::vector<std::vector<double>> ganil_theta;
+    std::vector<std::vector<std::vector<double>>> ganil_phi;
 
     double save_position[2][3];
 
+    std::ofstream Thrown;
 
     void set_GANIL();
 

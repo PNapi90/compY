@@ -12,7 +12,10 @@
 GammaScraper::GammaScraper(std::vector<int> &range,
 						   bool type,
 						   int thr_num,
-						   bool NoG) 
+						   bool NoG)
+	: Geo(),
+	  Store(),
+	  fc_means(1.5,0,thr_num+1)
 {
 	
 	this->NoG = NoG;
@@ -25,10 +28,6 @@ GammaScraper::GammaScraper(std::vector<int> &range,
 	in_bad_dets = 0;
 
 	set_values = nullptr;
-
-	fc_means = new fuzzy_c_means(1.5,0,thr_num+1);
-	Geo = new Geometry_Checker();
-	Store = new DoubleStore();
 
 	GammaBuffer = std::vector<std::vector<double> >(50,std::vector<double>(5,0));
 	
@@ -48,19 +47,20 @@ GammaScraper::GammaScraper(std::vector<int> &range,
 	
 	Save2.open("Gammas/TwoInts/Two_" + std::to_string(range[0]) + "_" + std::to_string(range[1]));
 
+	tmpFile_Dist.open("TmpFile_S");
 }
 
 //--------------------------------------------------------------
 
 GammaScraper::~GammaScraper() {
-	delete fc_means;
+	
 	for(int i = 0;i < 2;++i) delete[] centroids[i];
 	delete[] centroids;
 
-	delete Store;
 	if(!NoG) tmp_File.close();
 	SaveFile.close();
 	Save2.close();
+	tmpFile_Dist.close();
 }
 
 //--------------------------------------------------------------
@@ -69,8 +69,9 @@ void GammaScraper::LOAD(){
 
 	const char* format2 = "%lf %lf %lf %lf %lf %lf %lf";
 
-	std::string name = "Stored/Bad_Gammas/GammaFalse_" + std::to_string(range[0]) + "_" + std::to_string(range[1]);
+	//std::string name = "Stored/Bad_Gammas/GammaFalse_" + std::to_string(range[0]) + "_" + std::to_string(range[1]);
 	//std::string name = "Stored/Gamma_" + std::to_string(range[0]) + "_" + std::to_string(range[1]);
+	std::string name = "Stored/GammaOFT_D_OUT";
 	std::ifstream data(name);
 	if(data.fail()){
 		std::cerr << "Could not find " << name << std::endl;
@@ -88,11 +89,13 @@ void GammaScraper::LOAD(){
 
 	iter = 0;
 
-	while(std::getline(data,line,'\n')){
+	while(std::getline(data,line,'\n'))
+	{
 		std::sscanf(line.c_str(),format,&x[0],&x[1],&x[2],&x[3],&x[4],&x[5],&x[6],&Nt,&N,&ID,&delta_val);
 		//std::sscanf(line.c_str(),format2,&x[0],&x[1],&x[2],&x[3],&x[4],&x[5],&x[6]);
 		
-		if(x[0] > 0 && direct){
+		if(x[0] > 0 && direct)
+		{
 			lens[0] = Nt;
 			lens[1] = N;
 			this->ID = ID;
@@ -102,17 +105,19 @@ void GammaScraper::LOAD(){
 			GammaBuffer[iter][4] = iter;
 
 			//skip photons in bad part of detector
-			direct = direct && Geo->direct_check(GammaBuffer[iter]);
+			direct = direct && Geo.direct_check(GammaBuffer[iter]);
 
 			++iter;
 		}
-		else if(x[0] > 0 && !direct) continue;
+		else if(x[0] > 0 && !direct)
+			continue;
 
-		if(x[0] < 0){
-			if(direct){
-				
-				fc_means->reset();
-				fc_means->fuzzy_clustering(GammaBuffer,iter,2);
+		if(x[0] < 0)
+		{
+			if(direct)
+			{
+				fc_means.reset();
+				fc_means.fuzzy_clustering(GammaBuffer,iter,2);
 				if(iter == 2) Save2Ints();
 				StartComparison();
 			}
@@ -147,29 +152,34 @@ void GammaScraper::LOAD_Double(){
 	iter = 0;
 
 	int gamma_iter = 0;
-	Store->Reset();
+	Store.Reset();
 
-	while(std::getline(data,line,'\n')){
+	while(std::getline(data,line,'\n'))
+	{
 		std::sscanf(line.c_str(),format,&x[0],&x[1],&x[2],&x[3],&x[4],&x[5],&x[6],&Nt,&N,&ID,&delta_val);
-		if(x[0] > 0 && direct){
+		if(x[0] > 0 && direct)
+		{
 			lens[0] = Nt;
 			lens[1] = N;
 			for(int i = 0;i < 4;++i) GammaBuffer[iter][i] = x[i];
 
 			//skip photons in bad part of detector
-			direct = direct && Geo->direct_check(GammaBuffer[iter]);
+			direct = direct && Geo.direct_check(GammaBuffer[iter]);
 
 			++iter;
 		}
-		else if(x[0] > 0 && !direct) continue;
+		else if(x[0] > 0 && !direct)
+			continue;
 
-		if(x[0] < 0){
-			if(direct){
-				Store->SetGamma(GammaBuffer,iter);
-				cent_set = Store->CheckSetCentroids();
+		if(x[0] < 0)
+		{
+			if(direct)
+			{
+				Store.SetGamma(GammaBuffer,iter);
+				cent_set = Store.CheckSetCentroids();
 
 				if(cent_set){
-					double* set_values = Store->Compare();
+					double* set_values = Store.Compare();
 					for(int k = 0;k < 6;++k) SaveFile << set_values[k] << " ";
 					SaveFile << std::endl;
 					set_values = nullptr;
@@ -179,13 +189,16 @@ void GammaScraper::LOAD_Double(){
 
 			++gamma_iter;
 
-			if(gamma_iter == 2){
+			if(gamma_iter == 2)
+			{
 				gamma_iter = 0;
-				Store->Reset();
+				Store.Reset();
 				if(!direct) ++in_bad_dets;
 			}
 
-			for(int i = 0;i < iter;++i) for(int j = 0;j < 4;++j) GammaBuffer[i][j] = 0;
+			for(int i = 0;i < iter;++i) 
+				for(int j = 0;j < 4;++j)
+					GammaBuffer[i][j] = 0;
 
 			direct = true;
 			iter = 0;
@@ -201,8 +214,8 @@ void GammaScraper::StartComparison(){
 
 	double distance = 0;
 
-	std::vector<std::vector<double> > centroids_t = fc_means->return_energy_centroids();
-	int first_pos = fc_means->get_first_cluster_ID();
+	std::vector<std::vector<double> > centroids_t = fc_means.return_energy_centroids();
+	int first_pos = fc_means.get_first_cluster_ID();
 
 	for(int i = 0;i < 2;++i){
 		for(int j = 0;j < 3;++j){
@@ -236,8 +249,21 @@ void GammaScraper::StartComparison(){
 		}
 	}
 	
-	double air = Geo->outer_shell(centroids_t);
-	air += Geo->get_air_path(centroids_t);
+	double air = Geo.outer_shell(centroids_t);
+	air += Geo.get_air_path(centroids_t);
+
+	if(distance - air < 160 || true)
+	{
+		for(int i = 0;i < 2;++i)
+		{
+			for(auto c : centroids_t[i])
+				tmpFile_Dist << c << " ";
+			tmpFile_Dist << distance << " " << air << std::endl;
+		}
+		for(int i = 0;i < 6;++i)
+			tmpFile_Dist << -99999 << " ";
+		tmpFile_Dist << std::endl;
+	}
 	
 	if(std::abs(En_tmp[0] + En_tmp[1] - 661.7) <= 2 && !NoG) tmpFileWrite(centroids_t[0][0],distance-air);
 
@@ -252,8 +278,8 @@ void GammaScraper::tmpFileWrite(double EEE,double dair){
 	std::vector<std::vector<double> > tmp_cluster;
 	int len_tmp = 0;
 	for(int i = 0;i < 2;++i){
-		tmp_cluster = fc_means->return_cluster(i);
-		len_tmp = fc_means->return_cluster_len(i);
+		tmp_cluster = fc_means.return_cluster(i);
+		len_tmp = fc_means.return_cluster_len(i);
 		for(int j = 0;j < len_tmp;++j){
 			tmp_File << EEE << " ";
 			for(int k = 0;k < 4;++k) tmp_File << tmp_cluster[j][k] << " ";

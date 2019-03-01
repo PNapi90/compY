@@ -74,6 +74,10 @@ void D12_Handler::LOAD(){
         for(int i = 0;i < Values.size();++i)
         {
             Histogram[theta_i][i] = std::stod(Values[i]);
+            
+            if(Histogram[theta_i][i] != Histogram[theta_i][i])
+                Histogram[theta_i][i] = 0;
+
             maxVal = Histogram[theta_i][i] >= maxVal ? Histogram[theta_i][i] : Histogram[theta_i][i];
         }
         Maxima[theta_i] = maxVal;

@@ -577,8 +577,20 @@ void DataHandler::SaveMerge()
 		for(int i = 0;i <= m_iter;++i){
 			std::normal_distribution<double> GaussE(0,0.002/2.355*MergedData[i][0]);
 			TmpGamma[tmpIter][i][0] = MergedData[i][0] + GaussE(generator)*SMEAR;
-			for(int j = 1;j < 4;++j) TmpGamma[tmpIter][i][j] = MergedData[i][j] + GaussX(generator)*SMEAR;
-
+			
+			double Rtmp = 0;
+			bool correct = false;
+			while(!correct)
+			{
+				Rtmp = 0;
+				for(int j = 1;j < 4;++j)
+				{
+					TmpGamma[tmpIter][i][j] = MergedData[i][j] + GaussX(generator)*SMEAR;
+					Rtmp += pow(TmpGamma[tmpIter][i][j],2);
+				}
+				Rtmp = sqrt(Rtmp);
+				correct = (Rtmp > 235 && Rtmp < 325);
+			}
 			TmpGamma[tmpIter][i][4] = E0;
 			TmpGamma[tmpIter][i][5] = gamma_iter;
 			TmpGamma[tmpIter][i][6] = MergedData[i][4];
@@ -587,8 +599,11 @@ void DataHandler::SaveMerge()
 		TmpGammaLen[tmpIter] = m_iter+1;
 		++tmpIter;
 	}
-	else{
+	else
+	{
+
 		double EdTmp = 0;
+		std::vector<double> Xtmp(3,0);
 
 		if (OFT)
 			majorFile << GammaLine << std::endl;
@@ -597,16 +612,28 @@ void DataHandler::SaveMerge()
 		{
 			if (OFT) 
 				majorFile << "   " << Signs[i][0] << "   ";
-			
-			for (int j = 0; j < 4; ++j)
+
+			std::normal_distribution<double> GaussE(0, 0.002 / 2.355 * MergedData[i][0]);
+			MergedData[i][0] += GaussE(generator) * SMEAR;
+
+			double Rtmp = 0;
+			bool correct = false;
+
+			while (!correct)
 			{
-				if(j == 0)
+				Rtmp = 0;
+				for (int j = 1; j < 4; ++j)
 				{
-					std::normal_distribution<double> GaussE(0,0.002/2.355*MergedData[i][j]);
-					MergedData[i][j] += GaussE(generator)*SMEAR;
+					Xtmp[j - 1] = MergedData[i][j] + GaussX(generator) * SMEAR;
+					Rtmp += pow(Xtmp[j - 1], 2);
 				}
-				else 
-					MergedData[i][j] += GaussX(generator)*SMEAR;
+				Rtmp = sqrt(Rtmp);
+				correct = (Rtmp > 235 && Rtmp < 325);
+			}
+
+			for (int j = 1; j < 4; ++j)
+			{
+				MergedData[i][j] = Xtmp[j-1];
 				majorFile << MergedData[i][j] << " ";
 			}
 

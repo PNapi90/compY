@@ -1,7 +1,8 @@
 #include "Geometry_Checker.h"
 
-
-Geometry_Checker::Geometry_Checker(){
+Geometry_Checker::Geometry_Checker()
+    : GANIL_FILES(1)
+{
 
     for(int i = 0;i < 5;++i) lens_ARR[i] = 0;
     for(int i = 0;i < 2;++i) for(int j = 0;j < 3;++j) save_position[i][j] = 0;
@@ -10,28 +11,30 @@ Geometry_Checker::Geometry_Checker(){
     lens_ARR[1] = 20;
     lens_ARR[2] = 15;
 
-    ganil_theta = new double*[3];
-    ganil_phi = new double**[3];
+    ganil_theta.reserve(GANIL_FILES);
+    ganil_phi.reserve(GANIL_FILES);
 
-    for(int i = 0;i < 3;++i){
-    	ganil_theta[i] = new double[lens_ARR[i]];
-    	ganil_phi[i] = new double*[lens_ARR[i]];
-    	for(int j = 0;j < lens_ARR[i];++j) ganil_phi[i][j] = new double[2];
+    for (int i = 0; i < GANIL_FILES; ++i)
+    {
+        ganil_theta.push_back(std::vector<double>(lens_ARR[i],0));// = new double[lens_ARR[i]];
+        ganil_phi.push_back(std::vector<std::vector<double>>(lens_ARR[i],std::vector<double>(2, 0))); // = new double*[lens_ARR[i]];
     }
-
+    Thrown.open("Thrown.dat");
     set_GANIL();
 }
 
 Geometry_Checker::~Geometry_Checker(){
 
-    for(int i = 0;i < 3;++i){
+    /*for(int i = 0;i < 3;++i){
         for(int j = 0;j < lens_ARR[i];++j) delete[] ganil_phi[i][j];
         delete[] ganil_phi[i];
         delete[] ganil_theta[i];
     }
     delete[] ganil_theta;
     delete[] ganil_phi;
+    */
 
+   Thrown.close();
 }
 
 
@@ -54,7 +57,7 @@ double Geometry_Checker::outer_shell(std::vector<std::vector<double> > vec){
     
     double r_t[2],th_t[2],phi_t[2];
     bool check_stuff[2] = {true,true};
-    bool happend = false;
+    bool happened = false;
     for(int i = 0;i < 100;++i){
         lambda_t[0] = (i+1)*dist_quant;
         lambda_t[1] = (i+1)*dist_quant;
@@ -72,11 +75,11 @@ double Geometry_Checker::outer_shell(std::vector<std::vector<double> > vec){
         }
         
         for(int j = 0;j < 2;++j) check_stuff[j] = check_Geometry(j,r_t[j],th_t[j],phi_t[j],check_stuff[j]);
-        happend = !check_stuff[0] && !check_stuff[1];
+        happened = !check_stuff[0] && !check_stuff[1];
         
-        if(happend) break;
+        if(happened) break;
     }
-    if(happend){
+    if(happened){
         double norm_tmp = 0;
         for(int i = 0;i < 3;++i) norm_tmp += pow(save_position[0][i] - save_position[1][i],2);
 
@@ -87,24 +90,53 @@ double Geometry_Checker::outer_shell(std::vector<std::vector<double> > vec){
 
 
 double Geometry_Checker::get_air_path(std::vector<std::vector<double> > vec){
-	double x1[3] = {vec[0][1],vec[0][2],vec[0][3]};
-	double x2[3] = {vec[1][1],vec[1][2],vec[1][3]};
+    double x[2][3] = {{vec[0][1], vec[0][2], vec[0][3]}, {vec[1][1], vec[1][2], vec[1][3]}};
+
+
+    std::vector<double> Radii(2,0);
+
+    for(int i = 0;i < 2;++i)
+    {
+        for(int j = 0;j < 3;++j)
+            Radii[i] += pow(vec[i][j+1],2);
+        Radii[i] = sqrt(Radii[i]);
+        
+        if(Radii[i] <= 235)
+        {
+            double theta = acos(x[i][2]/Radii[i]);
+            double phi = atan2(x[i][1],x[i][0]);
+
+            x[i][0] = 235.1 * sin(theta) * cos(phi);
+            x[i][1] = 235.1 * sin(theta) * sin(phi);
+            x[i][2] = 235.1 * cos(theta);
+        }
+        else if(Radii[i] >= 325)
+        {
+            double theta = acos(x[i][2] / Radii[i]);
+            double phi = atan2(x[i][1], x[i][0]);
+
+            x[i][0] = 324.9 * sin(theta) * cos(phi);
+            x[i][1] = 324.9 * sin(theta) * sin(phi);
+            x[i][2] = 324.9 * cos(theta);
+        }
+    }
 
 	double inner_radius = 235;
+
 
 	double norm_gamma = 0;
 	double norm_x2 = 0;
 	double gamma_vec[3] = {0.,0.,0.};
 	for(int i = 0;i < 3;i++){
-		gamma_vec[i] = x2[i] - x1[i];
-		norm_x2 += pow(x1[i],2);
+		gamma_vec[i] = x[1][i] - x[0][i];
+		norm_x2 += pow(x[0][i],2);
 		norm_gamma += pow(gamma_vec[i],2);
 	}
 	norm_gamma = sqrt(norm_gamma);
 	for(int i = 0;i < 3;i++) gamma_vec[i] /= norm_gamma;
 
 	double scalar_product = 0;
-	for(int i = 0;i < 3;i++) scalar_product += gamma_vec[i]*x1[i];
+	for(int i = 0;i < 3;i++) scalar_product += gamma_vec[i]*x[0][i];
 
 	double inside_shell = norm_x2 - pow(inner_radius,2);
 
@@ -141,7 +173,7 @@ bool Geometry_Checker::check_Geometry(int j,double r,double th,double phi,bool c
     
     bool broken = false;
     
-    for(int i = 0;i < 3;++i){
+    for(int i = 0;i < GANIL_FILES;++i){
         for(int k = 0;k < lens_ARR[i];++k){
             if(th >= ganil_theta[i][k] && th < ganil_theta[i][k+1]){
                 pos[0] = i;
@@ -168,7 +200,8 @@ void Geometry_Checker::set_GANIL(){
    
     std::ifstream angle_data;
     char str[100];
-    for(int i = 0;i < 3;++i){
+    for (int i = 0; i < GANIL_FILES; ++i)
+    {
         sprintf(str,"inputdata/GANIL_ANGLES_%d.Angles",i+1);
         angle_data.open(str);
 
@@ -188,7 +221,8 @@ void Geometry_Checker::set_GANIL(){
 }
 
 
-bool Geometry_Checker::direct_check(std::vector<double> &vec_t){
+bool Geometry_Checker::direct_check(std::vector<double> &vec_t)
+{
     double vec[3] = {-vec_t[1],vec_t[2],-vec_t[3]};
     
     double r = 0;
@@ -199,5 +233,8 @@ bool Geometry_Checker::direct_check(std::vector<double> &vec_t){
 
     bool bad_area = check_Geometry(0,r,th,phi,true);
     
+    if(!bad_area)
+        Thrown << r << " " << th << " " << phi << std::endl;
+
     return bad_area;
 }

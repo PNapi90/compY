@@ -38,11 +38,11 @@ private:
 	double **centroids,*set_values;
 	double delta_arr;
 
-	fuzzy_c_means* fc_means;
-	Geometry_Checker* Geo;
-	DoubleStore* Store;
+	fuzzy_c_means fc_means;
+	Geometry_Checker Geo;
+	DoubleStore Store;
 
-	std::ofstream SaveFile,tmp_File,Save2;
+	std::ofstream SaveFile, tmp_File, Save2,tmpFile_Dist;
 
 	void LOAD();
 	void LOAD_Double();
