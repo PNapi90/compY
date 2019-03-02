@@ -26,8 +26,8 @@ PsiMerger::PsiMerger(int _E,
                  std::vector<int>(2,0)));
 
     //if debug mode, no histograms are loaded!
-    if(!debug)
-        LOAD();
+    //if(!debug)
+    //    LOAD();
 }
 
 //--------------------------------------------------------------
@@ -89,7 +89,7 @@ void PsiMerger::LOAD()
         DATA.close();
         DATA.clear();
     }
-    if (true)
+    if (false)
     {
         std::cout << "\t\t\t\t\t\t\t\r";
         std::cout << "Loaded " << folder << " E(\u03B8)-X(\u03D1) histograms";

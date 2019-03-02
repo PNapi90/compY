@@ -30,6 +30,16 @@ Uncertainties::Uncertainties(Binnings &Bins,
         }
         D0s_Called = std::vector<bool>(nBins_d0,false); 
 
+
+        int nthr_tmp = 5;
+        std::thread t[nthr_tmp];
+        
+        for(int i = 0;i < nthr_tmp;++i)
+            t[i] = LoadPsis(i,nthr_tmp);
+        
+        for(int i = 0;i < nthr_tmp;++i)
+            t[i].join();
+
         EComp.INIT();
     }
 }
@@ -93,6 +103,22 @@ bool Uncertainties::CallIntersection(std::vector<int> &binsArray, double thetaX,
     //double P = EComp.Intersection(HistTmp,E);
 
     return P;
+}
+
+//--------------------------------------------------------------
+
+std::thread Uncertainties::LoadPsis(int i,int nthr)
+{
+    int perThread = nBins_d0/nthr;
+    
+    return std::thread(
+        [=]
+        {
+            for(int j = i*perThread;j < (i+1)*perThread;++j)
+                PSIs[j]->LOAD();
+        });
+    
+
 }
 
 //--------------------------------------------------------------

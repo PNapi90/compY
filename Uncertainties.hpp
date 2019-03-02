@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <iterator>
 #include <iostream>
+#include <thread>
 #include <memory>
 
 #include "D0_Handler.hpp"
@@ -31,6 +32,8 @@ private:
     std::vector<std::shared_ptr<D0_Handler> > D0s;
     std::vector<std::shared_ptr<PsiMerger> > PSIs;
     std::vector<bool> D0s_Called;
+
+    std::thread LoadPsis(int i,int nthr);
 
     ComptonHandler EComp;
 

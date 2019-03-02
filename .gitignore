@@ -11,6 +11,13 @@
 *.out
 compY
 
+AfterOFT2
+All2_NewOFT
+AfterOFT2
+All2_NewOFT
+OFT2
+All2_File
+
 .vscode/*
 .vscode/
 

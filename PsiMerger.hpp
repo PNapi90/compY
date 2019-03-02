@@ -21,7 +21,7 @@ private:
     int d0,E,Ebins;
     std::vector < std::vector<std::vector<int>>> Histograms;
 
-    void LOAD();
+    
 
 public:
     PsiMerger(int _E,
@@ -32,6 +32,8 @@ public:
     bool GetP(int d12_i,
                 int E_i,
                 int theta_i);
+
+    void LOAD();
 };
 
 
