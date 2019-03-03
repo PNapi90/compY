@@ -1,0 +1,2 @@
+all:
+	g++ -std=c++11 -g -O3 PFT_to_Scraper.cpp -o ConvertIt
