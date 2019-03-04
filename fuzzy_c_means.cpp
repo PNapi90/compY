@@ -423,11 +423,56 @@ std::vector<std::vector<double> >  fuzzy_c_means::return_cluster(int pos){return
 
 double fuzzy_c_means::get_edep_in_cluster(){return sum_edep;}
 
-std::vector<std::vector<double> > fuzzy_c_means::return_energy_centroids(){
+std::vector<std::vector<double> > fuzzy_c_means::return_energy_centroids()
+{
+    if(am_points > 2)
+        Modify_Centroids();
+
+
 	return en_centroid;
 }
 
 
 int fuzzy_c_means::get_first_cluster_ID(){
 	return first_cluster*0;
+}
+
+
+
+void fuzzy_c_means::Modify_Centroids()
+{
+    double minDist = 0;
+    std::vector<int> DistTuple(2,0);
+    double norm = 0;
+    for(int i = 0;i < cluster_len[0];++i)
+    {
+        for(int j = 0;j < cluster_len[1];++j)
+        {
+            norm = 0;
+            for(int k = 1;k < 4;++k)
+            {
+                norm += pow(fc_clusters[0][i][k] - fc_clusters[1][j][k],2);
+            }
+            norm = sqrt(norm);
+            
+            if(norm <= 0)
+            {
+                std::cerr << "Norm in fc_means = " << norm << " <= 0 !" <<std::endl;
+                exit(1);
+            }
+
+            if(norm < minDist)
+            {
+                minDist = norm;
+                DistTuple[0] = i;
+                DistTuple[1] = j;
+            }
+        }
+    }
+
+    for(int i = 0;i < 2;++i)
+    {
+        for(int j = 1;j < 4;++j)
+            en_centroid[i][j] = fc_clusters[i][DistTuple[i]][j];
+    }
 }

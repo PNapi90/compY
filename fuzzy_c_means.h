@@ -55,6 +55,7 @@ private:
     void print_info();
     void sort_clusters();
     void set_energy_centroids();
+    void Modify_Centroids();
 
 public:
     fuzzy_c_means(double,int,int);
