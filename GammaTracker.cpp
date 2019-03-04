@@ -33,7 +33,7 @@ GammaTracker::GammaTracker(std::vector<int> &range,
 	  HeaderWritten(false),
 	  Mimic(_Mimic)
 {
-	
+ 	
 	if(_order > 2 || _order <= 0) order = 1;
 	else order = _order;
 
@@ -150,7 +150,7 @@ void GammaTracker::LOAD()
 		name += OFT ? "OFT/" : "";
 		name += "Gamma_" + tmpDouble  + std::to_string(range[0]) + "_" + std::to_string(range[1]) + ".rawSpec";
 	}
-
+        std::cout << type << " " << OFT << " " << tmpDouble << " <- " << name << std::endl; 
 	std::ifstream data(name);
 	if(data.fail()){
 		std::cerr << "Could not find " << name << std::endl;

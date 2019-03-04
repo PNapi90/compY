@@ -30,10 +30,10 @@ Uncertainties::Uncertainties(Binnings &Bins,
         }
         D0s_Called = std::vector<bool>(nBins_d0,false); 
 
-
+      
         int nthr_tmp = 5;
         std::thread t[nthr_tmp];
-        
+  
         for(int i = 0;i < nthr_tmp;++i)
             t[i] = LoadPsis(i,nthr_tmp);
         
@@ -110,10 +110,11 @@ bool Uncertainties::CallIntersection(std::vector<int> &binsArray, double thetaX,
 std::thread Uncertainties::LoadPsis(int i,int nthr)
 {
     int perThread = nBins_d0/nthr;
-    
+    std::cout << "per  " << perThread << std::endl;   
     return std::thread(
         [=]
         {
+	   std::cout << "in lambda" << std::endl;
             for(int j = i*perThread;j < (i+1)*perThread;++j)
                 PSIs[j]->LOAD();
         });

@@ -69,12 +69,12 @@ void GammaScraper::LOAD(){
 
 	const char* format2 = "%lf %lf %lf %lf %lf %lf %lf";
 
-	//std::string name = "Stored/Bad_Gammas/GammaFalse_" + std::to_string(range[0]) + "_" + std::to_string(range[1]);
+	std::string name = "Stored/Bad_Gammas/GammaFalse_" + std::to_string(range[0]) + "_" + std::to_string(range[1]);
 	//std::string name = "Stored/Gamma_" + std::to_string(range[0]) + "_" + std::to_string(range[1]);
-	std::string name = "Stored/GammaOFT_D_OUT";
+	//std::string name = "OFT_Double_Scraper";//"Stored/GammaOFT_D_OUT";
 	std::ifstream data(name);
 	if(data.fail()){
-		std::cerr << "Could not find " << name << std::endl;
+		std::cerr << "Scraper: Could not find " << name << std::endl;
 		exit(1);
 	}
 	std::string line;
@@ -252,7 +252,7 @@ void GammaScraper::StartComparison(){
 	double air = Geo.outer_shell(centroids_t);
 	air += Geo.get_air_path(centroids_t);
 
-	if(distance - air < 160 || true)
+	if(distance - air < 160 && false)
 	{
 		for(int i = 0;i < 2;++i)
 		{

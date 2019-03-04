@@ -63,7 +63,7 @@ void PsiMerger::LOAD()
     std::string name;
     std::string folder = "d0_E_Merge/" + folderName + "d0_" + std::to_string(d0);
     std::ifstream DATA;
-
+    
     int d12_i = 0;
 
     for(int i = 0;i < 150;++i)

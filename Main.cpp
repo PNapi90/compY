@@ -129,7 +129,7 @@ int main(int argc, char **argv)
 
 
 	//=========================
-	int MAX_ITER = 2;
+	int MAX_ITER = 6;
 	//=========================
 
 	int set_begin = 0;

@@ -1,2 +1,2 @@
 all:
-	g++ -std=c++11 -g -O3 PFT_to_Scraper.cpp -o ConvertIt
+	g++ -std=c++11 -g -O3 OFT_to_Scraper.cpp -o ConvertIt

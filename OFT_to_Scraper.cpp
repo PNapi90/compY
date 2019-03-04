@@ -8,7 +8,7 @@ int main()
 {
     const char* format = "%lf %lf %lf %lf %lf %lf";
 
-    std::ifstream DATA("Single_OFT_Dist");
+    std::ifstream DATA("Double_OFT_Dist");
     double x[6];
 
     std::string line;
@@ -43,7 +43,9 @@ int main()
                 OUTPUT << std::endl;
             }
             ++line_Num;
-            iter = 0;
+            if(line_Num % 100000 == 0)
+		std::cout << "@ line # " << line_Num << std::endl;
+	    iter = 0;
         }
         else
         {

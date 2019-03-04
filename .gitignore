@@ -18,6 +18,11 @@ All2_NewOFT
 OFT2
 All2_File
 
+
+Double_OFT_Dist
+OFT_Double_Scraper
+Single_OFT_Dist
+
 .vscode/*
 .vscode/
 
