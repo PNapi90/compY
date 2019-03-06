@@ -105,7 +105,7 @@ DataHandler::~DataHandler()
 	if(range[0] >= 20)
 		return;
 	//save absorbed files
-	std::string typeStr = type ? "Double" : "Single";
+	std::string typeStr = Mimic ? "Double" : "Single";
 	std::ofstream AbsorberFile("Absorbed/Thr_"+ typeStr + "_" + std::to_string(thr_num));
 
 	if(AbsorberFile.fail())
