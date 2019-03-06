@@ -19,7 +19,7 @@ int main()
     for(int i = 3;i < 5;++i)
         RestVals[i] = 2;
 
-    std::ofstream OUTPUT("OFT_Single_Scraper");
+    std::ofstream OUTPUT("OFT_Double_Scraper");
 
     std::vector<std::vector<double>> Buffer(2,std::vector<double>(4,0));
 

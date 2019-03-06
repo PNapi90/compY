@@ -57,6 +57,7 @@ struct FlagsAndVals
 	bool OFT_Track = false;
 	bool DirectOutput = false;
 	bool Mimic = false;
+	int MAX_ITER = 6;
 };
 
 
@@ -123,13 +124,17 @@ int main(int argc, char **argv)
 	if (F.nthr >= F.amount_of_sets)
 		F.nthr = F.amount_of_sets;
 
+	//========================
+	F.MAX_ITER = 2;
+	//========================
+
 	PrintCouts(F);
 
 	getSets(sets, F.nthr, F.amount_of_sets);
 
 
 	//=========================
-	int MAX_ITER = 6;
+	int MAX_ITER = F.MAX_ITER;
 	//=========================
 
 	int set_begin = 0;
@@ -343,6 +348,8 @@ void PrintCouts(FlagsAndVals &F)
 		std::cout << "Data in " << (F.type ? d_or_s[1] : d_or_s[0]) << " mode" << std::endl;
 	else
 		std::cout << "Data in " << d_or_s[1] << " -> " << d_or_s[0] << " mimic mode" << std::endl;
+
+	std::cout << "Processing multiplicities up to " << F.MAX_ITER << std::endl;
 	std::cout << "======================================================" << std::endl;
 }
 

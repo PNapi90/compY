@@ -71,7 +71,7 @@ void GammaScraper::LOAD(){
 
 	std::string name = "Stored/Bad_Gammas/GammaFalse_" + std::to_string(range[0]) + "_" + std::to_string(range[1]);
 	//std::string name = "Stored/Gamma_" + std::to_string(range[0]) + "_" + std::to_string(range[1]);
-	//std::string name = "OFT_Double_Scraper";//"Stored/GammaOFT_D_OUT";
+	//name = "OFT_Single_Scraper";//"Stored/GammaOFT_D_OUT";
 	std::ifstream data(name);
 	if(data.fail()){
 		std::cerr << "Scraper: Could not find " << name << std::endl;

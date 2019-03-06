@@ -429,7 +429,7 @@ std::vector<std::vector<double> > fuzzy_c_means::return_energy_centroids()
         Modify_Centroids();
 
 
-	return en_centroid;
+    return en_centroid;
 }
 
 
@@ -441,7 +441,7 @@ int fuzzy_c_means::get_first_cluster_ID(){
 
 void fuzzy_c_means::Modify_Centroids()
 {
-    double minDist = 0;
+    double minDist = 100000000;
     std::vector<int> DistTuple(2,0);
     double norm = 0;
     for(int i = 0;i < cluster_len[0];++i)
