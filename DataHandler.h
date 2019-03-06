@@ -34,6 +34,8 @@ private:
 	int gamma_iter,m_iter,double_gam_counter,thr_num,tmpIter;
 
 	int PhotonID;
+	
+	std::vector<int> AbsorbedInN;
 
 	int maxG,am_GammasFull,SMEAR;
 

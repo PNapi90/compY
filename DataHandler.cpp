@@ -38,6 +38,8 @@ DataHandler::DataHandler(std::vector<int> &range,
 	gamma_iter = 0;
 	E0 = 0;
 
+	AbsorbedInN = std::vector<int>(10,0);
+
 	am_GammasFull = 0; 
 	
 	gammaID = 0;
@@ -98,6 +100,25 @@ DataHandler::~DataHandler()
 	Etot_file.close();
 	if(thr_num == 0) max_file.close();
 	if(!NoG) gammaTmpFile.close();
+
+	//only write eff. in first run of 20 threads
+	if(range[0] >= 20)
+		return;
+	//save absorbed files
+	std::string typeStr = type ? "Double" : "Single";
+	std::ofstream AbsorberFile("Absorbed/Thr_"+ typeStr + "_" + std::to_string(thr_num));
+
+	if(AbsorberFile.fail())
+	{
+		std::cerr << "Could not open absorbed files" << std::endl;
+		std::cerr << "Continue without writing efficiencies" << std::endl;
+		return;
+	}
+
+	for(unsigned int i = 0;i < AbsorbedInN.size();++i)
+		AbsorberFile << i+1 << " " << AbsorbedInN[i] << std::endl;
+	
+	AbsorberFile.close();
 }
 
 //-------------------------------------------------------------------------------------------
@@ -147,7 +168,7 @@ void DataHandler::LOAD(){
 
 		data_coming = false;
 
-		while(std::getline(file,line,'\n') && am_GammasFull < maxG)
+		while(std::getline(file,line) && am_GammasFull < maxG)
 		{
 			if(OFT && !data_coming)
 				majorFile << line << std::endl;
@@ -501,7 +522,9 @@ void DataHandler::MergeGammaAndSave(){
 
 	double distance = 0;
 
-	for(int i = 0;i < 4;++i) MergedData[0][i] = Gamma[0][i];
+	for(int i = 0;i < 4;++i)
+		MergedData[0][i] = Gamma[0][i];
+	
 	m_iter = 0;
 	++gammaID;
 	
@@ -573,13 +596,20 @@ inline bool DataHandler::ConvolSuppr(){
 void DataHandler::SaveMerge()
 {
 
-	if(!type && !OFT){
-		for(int i = 0;i <= m_iter;++i){
+	if(!type && !OFT)
+	{	
+		double Esum_tmp = 0;
+		for(int i = 0;i <= m_iter;++i)
+		{
 			std::normal_distribution<double> GaussE(0,0.002/2.355*MergedData[i][0]);
 			TmpGamma[tmpIter][i][0] = MergedData[i][0] + GaussE(generator)*SMEAR;
+
+			Esum_tmp += TmpGamma[tmpIter][i][0];
 			
 			double Rtmp = 0;
 			bool correct = false;
+
+			//keeps smeared points inside of detector volume
 			while(!correct)
 			{
 				Rtmp = 0;
@@ -596,6 +626,10 @@ void DataHandler::SaveMerge()
 			TmpGamma[tmpIter][i][6] = MergedData[i][4];
 			TmpGamma[tmpIter][i][7] = DetIDs[i];
 		}
+
+		if(std::abs(Esum_tmp - 661.7) <= 2)
+			++AbsorbedInN[m_iter-1];
+		
 		TmpGammaLen[tmpIter] = m_iter+1;
 		++tmpIter;
 	}
