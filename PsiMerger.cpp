@@ -12,7 +12,7 @@ PsiMerger::PsiMerger(int _E,
 
     if(E == -999)
     {
-        folderName = "TmpEGamma_661/";
+        folderName = "ExpEGamma_661/";//"TmpEGamma_661/";
         //folderName = "EGamma_661/";
         Ebins = 175;
     }

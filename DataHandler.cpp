@@ -369,7 +369,7 @@ void DataHandler::LOAD_GANIL()
 	for (int i = 0; i < 1; ++i)
 	{
 		//name = "Gamma_GANIL/DATA_REAL/FOR_MC";
-		name = "Gamma_GANIL/GammaEvents.GANIL";
+		name = "Gamma_GANIL/GammaEvents2.GANIL";
 		file.open(name);
 		if (file.fail())
 		{
@@ -608,9 +608,24 @@ void DataHandler::SaveMerge()
 			
 			double Rtmp = 0;
 			bool correct = false;
+			int whileCounter = 0;
+		
+			Rtmp = 0;
+			for(int j = 1;j < 4;++j)
+			{
+				Rtmp += pow(MergedData[i][j],2);
+			}
+			Rtmp = sqrt(Rtmp);
+			correct = (Rtmp > 235 && Rtmp < 325);
+			
+			if(!correct)
+			{
+				//std::cerr << "Bad gamma outside det" << std::endl;
+				continue;
+			}
 
 			//keeps smeared points inside of detector volume
-			while(!correct)
+			while(!correct && whileCounter < 100)
 			{
 				Rtmp = 0;
 				for(int j = 1;j < 4;++j)
@@ -620,6 +635,11 @@ void DataHandler::SaveMerge()
 				}
 				Rtmp = sqrt(Rtmp);
 				correct = (Rtmp > 235 && Rtmp < 325);
+				++whileCounter;
+			}
+			if(whileCounter >= 100)
+			{
+				std::cout << "possible problem!" << std::endl;
 			}
 			TmpGamma[tmpIter][i][4] = E0;
 			TmpGamma[tmpIter][i][5] = gamma_iter;
