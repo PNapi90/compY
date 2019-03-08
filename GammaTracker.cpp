@@ -150,7 +150,7 @@ void GammaTracker::LOAD()
 		name += OFT ? "OFT/" : "";
 		name += "Gamma_" + tmpDouble  + std::to_string(range[0]) + "_" + std::to_string(range[1]) + ".rawSpec";
 	}
-        std::cout << type << " " << OFT << " " << tmpDouble << " <- " << name << std::endl; 
+    std::cout << type << " " << OFT << " " << tmpDouble << " <- " << name << std::endl; 
 	std::ifstream data(name);
 	if(data.fail()){
 		std::cerr << "Could not find " << name << std::endl;
@@ -540,7 +540,7 @@ bool GammaTracker::Tracking(int iter,int pos_d)
 
 	std::vector<double> EtmpVec(2,0);
 
-	bool FirstStep = true;
+	bool FirstStep = true;	
 
 	//Permutations of all convoluted points
 	do
@@ -916,10 +916,21 @@ inline bool GammaTracker::CheckGammaBadness(int iter)
 	{
 		norm = 0;
 		for(int j = 1;j < 4;++j)
+		{
 			norm += std::abs(GammaBuffer[i][j] - GammaBuffer[i+1][j]);
-		
+		}
+
 		if(!norm)
-			return true;
+			return true;	
+	}
+	for(int i = 0;i < iter;++i)
+	{
+
+		for(int j = 1;j < 4;++j)
+		{
+			if(GammaBuffer[i][j] == 0)
+				return true;
+		}
 	}
 	return false;
 }

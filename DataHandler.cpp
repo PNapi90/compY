@@ -624,6 +624,8 @@ void DataHandler::SaveMerge()
 				continue;
 			}
 
+			correct = false;
+
 			//keeps smeared points inside of detector volume
 			while(!correct && whileCounter < 100)
 			{
